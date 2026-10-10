@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Permisos completos para todas las colecciones institucionales públicas y administrativas
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

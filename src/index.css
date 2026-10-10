@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", Georgia, Cambria, "Times New Roman", serif;
+  --font-quote: "Lora", Georgia, "Times New Roman", serif;
+  --color-fondo: #FFFFFF;
+  --color-texto: #3E2723;
+  --color-primario: #795548;
+  --color-secundario: #5DADE2;
+  --color-detalle: #F4D03F;
+  --color-alerta: #E67E22;
+}
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Tipografía Base Predeterminada: Sans-serif limpia y equilibrada para lectura (Inter) */
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--color-texto);
+  background-color: var(--color-fondo);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tipografía de Títulos Predeterminada: Serif académica y solemne (Playfair Display) */
+h1, h2, h3, h4 {
+  font-family: "Playfair Display", Georgia, Cambria, "Times New Roman", serif;
+  letter-spacing: -0.015em;
+}
+
+/* Tipografía de Citas, Testimonios y Lemas: Serif Humanista (Lora Italic) */
+blockquote, .font-quote, .academic-slogan {
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+}
+
+/* Clases utilitarias directas */
+.font-serif {
+  font-family: "Playfair Display", Georgia, Cambria, "Times New Roman", serif !important;
+}
+
+.font-sans {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.font-quote {
+  font-family: "Lora", Georgia, "Times New Roman", serif !important;
+}
+
+/* Microinteracciones físicas profesionales en botones */
+button:not(:disabled), [role="button"]:not(:disabled) {
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out), opacity 160ms var(--ease-out);
+}
+
+button:not(:disabled):active, [role="button"]:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Micro-elevación física para tarjetas interactivas */
+.card-hover {
+  transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-hover:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 24px -10px rgba(121, 85, 72, 0.15);
+  }
+}
+
+/* Animación de Selección de Texto Mágica */
+::selection {
+  background: rgba(121, 85, 72, 0.22);
+  color: #2D1A15;
+  text-shadow: 0 0 1px rgba(121, 85, 72, 0.3);
+}
+
+::-moz-selection {
+  background: rgba(121, 85, 72, 0.22);
+  color: #2D1A15;
+}
+
+/* Letras interactivas con movimiento elástico al pasar el cursor o seleccionar */
+.interactive-letter {
+  display: inline-block;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), color 180ms ease;
+}
+
+.interactive-letter:hover {
+  transform: translateY(-3px) scale(1.15) rotate(-2deg);
+  color: var(--color-primario);
+}
+
+/* Efecto de foco y selección en inputs con suave halo animado */
+input:focus, textarea:focus, select:focus {
+  transition: box-shadow 200ms var(--ease-out), border-color 200ms var(--ease-out), transform 150ms var(--ease-out);
+  transform: scale(1.004);
+}
+
+/* Animación de pulso suave en elementos seleccionados */
+@keyframes select-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.animate-select-pop {
+  animation: select-pulse 280ms var(--ease-out);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Accesibilidad y movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   ESTILOS DE IMPRESIÓN PROFESIONAL DE BOLETOS OFICIALES
+   ========================================================================== */
+@media print {
+  /* Ocultar elementos de interfaz no imprimibles */
+  header, 
+  footer, 
+  nav, 
+  aside, 
+  .print\:hidden,
+  #breadcrumbs,
+  .chatbot-container,
+  .offline-banner,
+  .cybersecurity-alert-banner,
+  button,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  /* Resetear página para impresión limpia */
+  html, body {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Si el modal de boletos está activo, desanclar overlay y ocupar página completa */
+  #sorteo-print-modal-container {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  /* Contenedor de impresión */
+  .printable-tickets-wrapper {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* Grillas de ultra alta densidad para máximo ahorro de papel (18-24 boletos por hoja) */
+  .print-grid-ultra {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1.8mm !important;
+  }
+
+  .print-grid-ultra-4col {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 1.2mm !important;
+  }
+
+  .print-grid-micro {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 2.5mm !important;
+  }
+
+  .print-grid-compact {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 3.5mm !important;
+  }
+
+  .print-grid-standard {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5mm !important;
+  }
+
+  .print-grid-large {
+    display: block !important;
+  }
+
+  /* Cada boleto no debe cortarse entre páginas */
+  .print-ticket-item {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px dashed #64748b !important;
+    background: #ffffff !important;
+  }
+
+  .print-density-ultra {
+    margin-bottom: 0 !important;
+    border-radius: 3px !important;
+    border: 1px dashed #94a3b8 !important;
+    padding: 1.6mm 2mm !important;
+  }
+
+  .print-density-micro {
+    margin-bottom: 0 !important;
+    border-radius: 4px !important;
+    border: 1px dashed #94a3b8 !important;
+  }
+
+  .print-density-compact {
+    margin-bottom: 0 !important;
+    border-radius: 6px !important;
+    border: 1px dashed #94a3b8 !important;
+  }
+
+  .print-density-standard {
+    margin-bottom: 0 !important;
+    border-radius: 8px !important;
+    border: 1px dashed #94a3b8 !important;
+  }
+
+  .print-density-large {
+    margin-bottom: 6mm !important;
+    border-radius: 12px !important;
+    border: 1px dashed #64748b !important;
+  }
+
+  /* Modo de ahorro de tinta y alto contraste */
+  .ink-saver-mode .print-ticket-item {
+    border-color: #000000 !important;
+    filter: grayscale(100%) contrast(125%) !important;
+    background: #ffffff !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 4mm 4mm;
+  }
+}
+
