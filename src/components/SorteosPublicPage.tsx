@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSorteos } from '../context/SorteoContext';
@@ -22,7 +22,8 @@ import {
   AlertTriangle,
   ShieldAlert,
   Lock,
-  Phone
+  Phone,
+  QrCode
 } from 'lucide-react';
 import SEO from './SEO';
 import { useAuth } from '../context/AuthContext';
@@ -47,6 +48,7 @@ export const SorteosPublicPage: React.FC = () => {
   // Estado del Modal de Eliminación
   const [ticketToDelete, setTicketToDelete] = useState<any | null>(null);
   const [isDeletingTicket, setIsDeletingTicket] = useState(false);
+  const searchSectionRef = useRef<HTMLDivElement>(null);
 
   // Auto-búsqueda si viene con parámetro ?ticket= en la URL (por ejemplo escaneando el QR)
   useEffect(() => {
@@ -54,6 +56,11 @@ export const SorteosPublicPage: React.FC = () => {
     if (codeParam) {
       setTicketSearchCode(codeParam);
       handleSearchTicket(codeParam);
+      // Desplazamiento suave para que en móviles el usuario vea su boleto de inmediato
+      const timer = setTimeout(() => {
+        searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 350);
+      return () => clearTimeout(timer);
     }
   }, [searchParams, tickets]);
 
@@ -148,7 +155,21 @@ export const SorteosPublicPage: React.FC = () => {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* BUSCADOR / VERIFICADOR DE BOLETOS */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md">
+        <div ref={searchSectionRef} className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md">
+          {searchParams.get('ticket') && (
+            <div className="mb-6 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-900 text-xs font-bold shadow-xs max-w-lg mx-auto">
+              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <QrCode className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <span className="block font-black text-sm text-emerald-950">¡Boleto Detectado por Código QR!</span>
+                <span className="font-mono text-emerald-800 text-xs">
+                  Verificando autenticidad en tiempo real: #{searchParams.get('ticket')}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="text-center max-w-xl mx-auto mb-6">
             <span className="text-xs font-bold text-primario tracking-widest uppercase block mb-1">
               {t('sorteos.searchLabel')}

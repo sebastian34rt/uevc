@@ -101,6 +101,9 @@ export default function App() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/sorteos" element={<SorteosPublicPage />} />
+                    <Route path="/sorteo" element={<SorteosPublicPage />} />
+                    <Route path="/rifas" element={<SorteosPublicPage />} />
+                    <Route path="/rifa" element={<SorteosPublicPage />} />
                     <Route path="/galeria" element={<Gallery />} />
                     <Route path="/inscripcion" element={<Enrollment />} />
                     <Route path="/login" element={<Login />} />
@@ -110,6 +113,7 @@ export default function App() {
                     <Route path="/en-vivo" element={<LiveStream />} />
                     <Route path="/directorio" element={<StaffDirectory />} />
                     <Route path="/helpdesk" element={<HelpDesk />} />
+                    <Route path="/soporte" element={<HelpDesk />} />
                   </Routes>
                 </Layout>
               </BrowserRouter>

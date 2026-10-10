@@ -5,6 +5,7 @@ import { SorteoTicket, Sorteo } from '../types/sorteo';
 import { useSiteContent } from '../context/SiteContentContext';
 import { Trophy, Printer, CheckCircle2, Award, Sparkles, Copy, Check, ShieldCheck, Calendar } from 'lucide-react';
 import { formatTicketCodeDisplay, normalizeTicketCode, is9DigitCode } from '../utils/sorteoSecurity';
+import { getSorteoQrUrl } from '../utils/domainConfig';
 
 export type TicketDensity = 'ultra' | 'micro' | 'compact' | 'standard' | 'large';
 
@@ -37,9 +38,8 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
   // Determinar densidad efectiva
   const effectiveDensity: TicketDensity = density || (compact ? 'compact' : 'standard');
 
-  // URL del QR de la página institucional para verificar el ticket
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://virgendelcisne.edu.ec';
-  const qrVerificationUrl = `${siteUrl}/sorteos?ticket=${encodeURIComponent(cleanCode)}`;
+  // URL del QR oficial de la página institucional para verificar el ticket escaneable desde celulares
+  const qrVerificationUrl = getSorteoQrUrl(cleanCode, content.publicDomain);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(cleanCode);
@@ -119,9 +119,9 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
           <div className="p-0.5 bg-white border border-slate-200 rounded shrink-0">
             <QRCodeSVG
               value={qrVerificationUrl}
-              size={34}
-              level="L"
-              includeMargin={false}
+              size={36}
+              level="M"
+              includeMargin={true}
             />
           </div>
         </div>
@@ -194,9 +194,9 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
           <div className="p-0.5 bg-white border border-slate-200 rounded shrink-0">
             <QRCodeSVG
               value={qrVerificationUrl}
-              size={46}
-              level="L"
-              includeMargin={false}
+              size={48}
+              level="M"
+              includeMargin={true}
             />
           </div>
         </div>
@@ -269,9 +269,9 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
           <div className="p-1 bg-white border border-slate-200 rounded-lg shrink-0">
             <QRCodeSVG
               value={qrVerificationUrl}
-              size={56}
+              size={58}
               level="M"
-              includeMargin={false}
+              includeMargin={true}
             />
           </div>
         </div>
@@ -441,7 +441,7 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
             value={qrVerificationUrl}
             size={76}
             level="M"
-            includeMargin={false}
+            includeMargin={true}
           />
         </div>
 

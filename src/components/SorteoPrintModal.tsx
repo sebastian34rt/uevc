@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSiteContent } from '../context/SiteContentContext';
+import { getPublicSiteUrl } from '../utils/domainConfig';
 
 interface SorteoPrintModalProps {
   isOpen: boolean;
@@ -109,6 +110,9 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <FileText className="w-3 h-3 text-emerald-700" />
                   ≈ {estimatedSheets} {estimatedSheets === 1 ? 'hoja' : 'hojas'}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200" title="Dominio web al que ingresan las personas al escanear el código QR">
+                  📱 QR destino: {getPublicSiteUrl(content.publicDomain)}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">

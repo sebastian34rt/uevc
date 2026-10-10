@@ -14,9 +14,13 @@ import {
   AlertCircle,
   Ticket,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  QrCode,
+  Link2
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { QRCodeSVG } from 'qrcode.react';
+import { cleanDomainUrl, getPublicSiteUrl, DEFAULT_PUBLIC_DOMAIN } from '../utils/domainConfig';
 
 interface AdminPageEditorProps {
   onNavigateTab?: (tab: string) => void;
@@ -202,6 +206,109 @@ export default function AdminPageEditor({ onNavigateTab }: AdminPageEditorProps 
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
+              {/* TARJETA DE CONFIGURACIÓN DEL DOMINIO PARA CÓDIGOS QR */}
+              <div className="md:col-span-2 p-5 bg-gradient-to-r from-blue-50/90 to-indigo-50/70 rounded-2xl border-2 border-blue-200/80 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-xl bg-primario text-white shrink-0 shadow-xs">
+                      <QrCode className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-extrabold text-sm text-slate-900">
+                          Dominio Oficial para Códigos QR e Impresiones
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          Escaneo Móvil Activo
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Este es el enlace al que ingresan automáticamente los usuarios al escanear los códigos QR de los <strong>boletos de sorteos</strong> o los <strong>equipos de HelpDesk</strong> con la cámara de su celular.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Previsualización en Vivo del QR */}
+                  <div className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-blue-200 shrink-0 self-start">
+                    <QRCodeSVG 
+                      value={formData.publicDomain || DEFAULT_PUBLIC_DOMAIN}
+                      size={58}
+                      level="M"
+                      includeMargin={true}
+                    />
+                    <div className="text-[10px] space-y-0.5">
+                      <span className="font-bold text-slate-800 block">QR de Prueba</span>
+                      <span className="text-slate-500 text-[9px] block">Apunta tu cámara</span>
+                      <a
+                        href={formData.publicDomain || DEFAULT_PUBLIC_DOMAIN}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primario font-bold hover:underline inline-flex items-center gap-1 mt-1 text-[10px]"
+                      >
+                        <ExternalLink className="w-3 h-3" /> Abrir enlace
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    URL / Dominio Público (HTTPS)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="url"
+                      value={formData.publicDomain || ''}
+                      onChange={(e) => handleChange('publicDomain', e.target.value)}
+                      placeholder="https://uevc.vercel.app"
+                      className="w-full pl-4 pr-24 py-3 rounded-xl border border-blue-300 focus:border-primario focus:ring-2 focus:ring-primario/20 outline-none text-sm font-mono text-slate-900 bg-white font-bold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                        if (origin && !origin.includes('localhost') && !origin.includes('ais-dev-')) {
+                          handleChange('publicDomain', origin);
+                        } else {
+                          handleChange('publicDomain', 'https://uevc.vercel.app');
+                        }
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      Detectar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Botones de Selección Rápida */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <span className="text-[11px] font-bold text-slate-500">Accesos rápidos:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleChange('publicDomain', 'https://uevc.vercel.app')}
+                    className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                      formData.publicDomain === 'https://uevc.vercel.app'
+                        ? 'bg-primario text-white border-primario shadow-2xs font-bold'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    🌐 Vercel (https://uevc.vercel.app)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleChange('publicDomain', 'https://virgendelcisne.edu.ec')}
+                    className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                      formData.publicDomain === 'https://virgendelcisne.edu.ec'
+                        ? 'bg-primario text-white border-primario shadow-2xs font-bold'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    🏫 Institucional (https://virgendelcisne.edu.ec)
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-texto/70 uppercase tracking-wider mb-2">Nombre Oficial de la Institución</label>
                 <input

@@ -16,6 +16,8 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { Link } from 'react-router-dom';
 import AdminCustomMaterials, { HelpdeskMaterial } from './AdminCustomMaterials';
+import { useSiteContent } from '../context/SiteContentContext';
+import { getHelpdeskAssetQrUrl, getPublicSiteUrl } from '../utils/domainConfig';
 
 export interface InventoryAsset {
   id: string;
@@ -59,6 +61,7 @@ export interface CustomMaterialItem {
 }
 
 export default function AdminQrInventory() {
+  const { content } = useSiteContent();
   const [assets, setAssets] = useState<InventoryAsset[]>([]);
   const [tickets, setTickets] = useState<InventoryTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -274,7 +277,7 @@ export default function AdminQrInventory() {
   };
 
   const getAssetHelpDeskUrl = (code: string) => {
-    return `${window.location.origin}/helpdesk?asset=${encodeURIComponent(code)}`;
+    return getHelpdeskAssetQrUrl(code, content.publicDomain);
   };
 
   const computePrefix = (lab: string, mat: string) => {
@@ -1008,6 +1011,7 @@ export default function AdminQrInventory() {
                             value={getAssetHelpDeskUrl(asset.assetCode)}
                             size={72}
                             level="M"
+                            includeMargin={true}
                           />
                           <span className="block text-[8px] font-mono text-texto/40 mt-1 uppercase">
                             Escaneable
@@ -1702,6 +1706,10 @@ export default function AdminQrInventory() {
                 <p className="text-xs text-texto/60">
                   {assetsToPrint.length} etiqueta(s) listas para imprimir en hojas adhesivas A4/Carta o cartulina.
                 </p>
+                <div className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Escaneable hacia: {getPublicSiteUrl(content.publicDomain)}</span>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
@@ -1772,7 +1780,8 @@ export default function AdminQrInventory() {
                     <QRCodeSVG
                       value={getAssetHelpDeskUrl(asset.assetCode)}
                       size={stickerFormat === 'compact' ? 85 : stickerFormat === 'badge' ? 140 : 110}
-                      level="H"
+                      level="M"
+                      includeMargin={true}
                     />
                   </div>
 

@@ -455,6 +455,19 @@ export default function HelpDesk() {
 
         {activeTab === 'report' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {urlAssetParam && (
+              <div className="lg:col-span-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-900 text-xs font-bold shadow-xs animate-fade-in">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <QrCode className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-black text-sm text-emerald-950">¡Código QR Escaneado Exitosamente!</span>
+                  <span className="font-mono text-emerald-800 text-xs">
+                    Formulario cargado automáticamente para el equipo: #{urlAssetParam.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            )}
             
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white rounded-3xl p-6 border border-primario/10 shadow-sm">

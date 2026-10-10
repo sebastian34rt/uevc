@@ -47,6 +47,7 @@ import {
   formatTicketCodeDisplay, 
   is9DigitCode 
 } from '../utils/sorteoSecurity';
+import { getSorteoQrUrl, getPublicSiteUrl } from '../utils/domainConfig';
 
 export const AdminSorteoManager: React.FC = () => {
   const { 
@@ -581,7 +582,8 @@ export const AdminSorteoManager: React.FC = () => {
     }
   };
 
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  // Dominio público oficial para QR y validaciones
+  const siteUrl = getPublicSiteUrl(content.publicDomain);
 
   // Estadísticas clave
   const totalTicketsCount = tickets.length;
@@ -983,7 +985,7 @@ export const AdminSorteoManager: React.FC = () => {
                       const isSelected = selectedTicketIds.includes(ticket.id);
                       const isWinner = ticket.status === 'winner' || raffle?.winnerTicketCode === cleanCode;
                       const isBlank = !ticket.participantName?.trim();
-                      const qrUrl = `${siteUrl}/sorteos?ticket=${encodeURIComponent(cleanCode)}`;
+                      const qrUrl = getSorteoQrUrl(cleanCode, content.publicDomain);
 
                       return (
                         <tr 
@@ -1104,11 +1106,12 @@ export const AdminSorteoManager: React.FC = () => {
 
                           {/* Miniatura QR de la página */}
                           <td className="py-3 px-4 text-center">
-                            <div className="inline-block p-1 bg-white rounded-lg border border-slate-200 shadow-2xs" title="Escanea para verificar en la web oficial">
+                            <div className="inline-block p-1 bg-white rounded-lg border border-slate-200 shadow-2xs" title={`Escanea para verificar: ${qrUrl}`}>
                               <QRCodeSVG
                                 value={qrUrl}
-                                size={36}
+                                size={38}
                                 level="M"
+                                includeMargin={true}
                               />
                             </div>
                           </td>

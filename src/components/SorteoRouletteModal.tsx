@@ -5,6 +5,8 @@ import { Trophy, Sparkles, X, Award, RotateCcw, CheckCircle2, Phone, Mail } from
 import { Sorteo, SorteoTicket } from '../types/sorteo';
 import { QRCodeSVG } from 'qrcode.react';
 import { formatTicketCodeDisplay } from '../utils/sorteoSecurity';
+import { useSiteContent } from '../context/SiteContentContext';
+import { getSorteoQrUrl } from '../utils/domainConfig';
 
 interface SorteoRouletteModalProps {
   isOpen: boolean;
@@ -21,6 +23,7 @@ export const SorteoRouletteModal: React.FC<SorteoRouletteModalProps> = ({
   tickets,
   onWinnerSelected
 }) => {
+  const { content } = useSiteContent();
   const [spinning, setSpinning] = useState(false);
   const [currentDisplayCode, setCurrentDisplayCode] = useState<string>('---');
   const [currentDisplayName, setCurrentDisplayName] = useState<string>('Esperando inicio...');
@@ -234,10 +237,12 @@ export const SorteoRouletteModal: React.FC<SorteoRouletteModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="bg-white p-1.5 rounded-lg shrink-0 self-end sm:self-auto">
+                  <div className="bg-white p-1.5 rounded-lg shrink-0 self-end sm:self-auto" title="Escanea para verificar en la web oficial">
                     <QRCodeSVG
-                      value={`${siteUrl}/sorteos?ticket=${encodeURIComponent(winner.ticketCode)}`}
-                      size={52}
+                      value={getSorteoQrUrl(winner.ticketCode, content.publicDomain)}
+                      size={54}
+                      level="M"
+                      includeMargin={true}
                     />
                   </div>
                 </div>
