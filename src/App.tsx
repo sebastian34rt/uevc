@@ -40,7 +40,6 @@ function Home() {
     <main>
       <SEO path="/" />
       <Hero />
-      <SorteoHomeBanner />
       <Suspense fallback={
         <div className="py-24 flex items-center justify-center">
           <span className="w-8 h-8 rounded-full border-4 border-primario/20 border-t-primario animate-spin"></span>
