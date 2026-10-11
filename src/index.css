@@ -159,8 +159,9 @@ html {
     print-color-adjust: exact !important;
   }
 
-  /* Si el modal de boletos está activo, desanclar overlay y ocupar página completa */
-  #sorteo-print-modal-container {
+  /* Si el modal de boletos o inventario QR está activo, desanclar overlay y ocupar página completa */
+  #sorteo-print-modal-container,
+  #inventory-print-modal-container {
     position: static !important;
     display: block !important;
     background: transparent !important;

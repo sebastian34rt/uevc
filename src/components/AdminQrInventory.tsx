@@ -1694,7 +1694,10 @@ export default function AdminQrInventory() {
       )}
 
       {showPrintModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm p-4 sm:p-6 flex items-center justify-center animate-fade-in print:p-0 print:bg-white print:static">
+        <div 
+          id="inventory-print-modal-container"
+          className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm p-4 sm:p-6 flex items-center justify-center animate-fade-in print:p-0 print:bg-white print:static"
+        >
           <div className="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 border border-neutral-300 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto print:max-w-none print:max-h-none print:shadow-none print:border-none print:p-0">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 print:hidden">
