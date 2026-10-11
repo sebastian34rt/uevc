@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom';
 import AdminCustomMaterials, { HelpdeskMaterial } from './AdminCustomMaterials';
 import { useSiteContent } from '../context/SiteContentContext';
 import { getHelpdeskAssetQrUrl, getPublicSiteUrl } from '../utils/domainConfig';
+import { generateInventoryQrPdf } from '../utils/inventoryPdfGenerator';
 
 export interface InventoryAsset {
   id: string;
@@ -84,6 +85,7 @@ export default function AdminQrInventory() {
   const [printTarget, setPrintTarget] = useState<'selected' | 'all' | 'single'>('all');
   const [singlePrintAsset, setSinglePrintAsset] = useState<InventoryAsset | null>(null);
   const [stickerFormat, setStickerFormat] = useState<'standard' | 'compact' | 'badge'>('standard');
+  const [isGeneratingInventoryPdf, setIsGeneratingInventoryPdf] = useState(false);
 
   const [singleCode, setSingleCode] = useState('');
   const [singleName, setSingleName] = useState('');
@@ -1738,6 +1740,36 @@ export default function AdminQrInventory() {
                 </div>
 
                 <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      setIsGeneratingInventoryPdf(true);
+                      await generateInventoryQrPdf({
+                        assets: assetsToPrint,
+                        schoolName: content.schoolName || content.shortName || 'U.E. VIRGEN DEL CISNE',
+                        format: stickerFormat
+                      });
+                    } catch (err) {
+                      console.error('Error generando PDF de inventario:', err);
+                      window.print();
+                    } finally {
+                      setIsGeneratingInventoryPdf(false);
+                    }
+                  }}
+                  disabled={isGeneratingInventoryPdf}
+                  className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  title="Descargar archivo PDF vectorial de etiquetas para imprimir"
+                >
+                  {isGeneratingInventoryPdf ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isGeneratingInventoryPdf ? 'Generando PDF...' : 'Guardar PDF'}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => window.print()}
                   className="bg-primario text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-primario/90 transition-all flex items-center gap-1.5 cursor-pointer"
                 >
@@ -1746,6 +1778,7 @@ export default function AdminQrInventory() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setShowPrintModal(false)}
                   className="text-texto/40 hover:text-texto p-2 font-bold cursor-pointer"
                 >

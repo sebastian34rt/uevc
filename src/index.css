@@ -422,6 +422,34 @@ html {
     filter: grayscale(100%) contrast(125%) !important;
     background: #ffffff !important;
   }
+
+  /* Guías de corte para etiquetas de inventario y stickers en impresión */
+  #inventory-print-modal-container .page-break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border-radius: 0 !important;
+    position: relative !important;
+    border: 1px dashed #64748b !important;
+  }
+
+  #inventory-print-modal-container .page-break-inside-avoid::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    z-index: 40 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background:
+      linear-gradient(to right, #000000 4mm, transparent 4mm) top left / 100% 1.5px no-repeat,
+      linear-gradient(to bottom, #000000 4mm, transparent 4mm) top left / 1.5px 100% no-repeat,
+      linear-gradient(to left, #000000 4mm, transparent 4mm) top right / 100% 1.5px no-repeat,
+      linear-gradient(to bottom, #000000 4mm, transparent 4mm) top right / 1.5px 100% no-repeat,
+      linear-gradient(to right, #000000 4mm, transparent 4mm) bottom left / 100% 1.5px no-repeat,
+      linear-gradient(to top, #000000 4mm, transparent 4mm) bottom left / 1.5px 100% no-repeat,
+      linear-gradient(to left, #000000 4mm, transparent 4mm) bottom right / 100% 1.5px no-repeat,
+      linear-gradient(to top, #000000 4mm, transparent 4mm) bottom right / 1.5px 100% no-repeat !important;
+  }
 }
 
 
