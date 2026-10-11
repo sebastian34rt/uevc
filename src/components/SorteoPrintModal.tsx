@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sorteo, SorteoTicket } from '../types/sorteo';
 import { SorteoTicketCard, TicketDensity } from './SorteoTicketCard';
 import { 
@@ -9,11 +9,14 @@ import {
   SlidersHorizontal,
   FileText,
   Sparkles,
-  Layers
+  Layers,
+  Download
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSiteContent } from '../context/SiteContentContext';
 import { getPublicSiteUrl } from '../utils/domainConfig';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface SorteoPrintModalProps {
   isOpen: boolean;
@@ -39,6 +42,14 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
   const [density, setDensity] = useState<TicketDensity>(defaultLayout);
   const [columns, setColumns] = useState<'auto' | '2' | '3' | '4'>('auto');
   const [inkSaver, setInkSaver] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const printableRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPdf = () => {
+    // Usamos el diálogo de impresión nativo del navegador, el cual soporta oklch()
+    // y permite guardar directamente como PDF vectorial con máxima nitidez.
+    window.print();
+  };
 
   // Mapeo rápido de sorteos por ID
   const sorteoMap = React.useMemo(() => {
@@ -122,6 +133,15 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>{isGeneratingPdf ? 'Generando PDF...' : 'Descargar PDF'}</span>
+            </button>
             <button
               type="button"
               onClick={handlePrint}
@@ -276,6 +296,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
         <div className="flex-1 overflow-y-auto p-3 sm:p-5 bg-slate-100/70 print:p-0 print:bg-white print:overflow-visible">
           {/* CONTENEDOR DE IMPRESIÓN */}
           <div 
+            ref={printableRef}
             className={`printable-tickets-wrapper mx-auto max-w-5xl print:w-full print:max-w-none ${
               density === 'ultra'
                 ? columns === '4'
