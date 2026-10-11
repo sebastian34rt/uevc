@@ -64,54 +64,64 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
     return (
       <div 
         ref={ticketRef}
-        className={`relative bg-white rounded-md border ${
+        className={`relative bg-white rounded border ${
           isWinner ? 'border-amber-400 bg-amber-50/20' : 'border-slate-300'
-        } text-slate-900 font-sans p-1.5 sm:p-2 overflow-hidden flex items-center justify-between gap-1.5 print-ticket-item print-density-ultra shadow-none text-[10px] leading-tight`}
+        } text-slate-900 font-sans p-1 sm:p-1.5 overflow-hidden flex items-center justify-between gap-1 shadow-none text-[9px] leading-tight w-full h-full box-border`}
       >
         {/* Lado izquierdo: Logo institucional, sorteo y fecha */}
-        <div className="flex-1 min-w-0 pr-1">
+        <div className="flex-1 min-w-0 pr-0.5">
           <div className="flex items-center gap-1 mb-0.5">
             <img 
               src="/logo.png" 
               alt="Logo" 
-              className="w-4 h-4 sm:w-5 sm:h-5 object-contain rounded p-0.5 bg-white border border-slate-200 shrink-0"
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 object-contain rounded p-0.5 bg-white border border-slate-200 shrink-0"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             <div className="min-w-0">
-              <span className="font-serif font-black text-[9px] sm:text-[10px] text-slate-900 block truncate">
+              <span className="font-serif font-black text-[8.5px] sm:text-[9.5px] text-slate-900 block truncate">
                 {content.shortName || 'U.E. Virgen del Cisne'}
               </span>
-              <span className="text-[7px] text-primario font-bold uppercase tracking-wider block">
+              <span className="text-[6.5px] text-primario font-bold uppercase tracking-wider block">
                 Boleto Oficial
               </span>
             </div>
           </div>
 
-          <h4 className="font-bold text-[9px] sm:text-[10px] text-slate-900 truncate">
+          <h4 className="font-bold text-[8.5px] sm:text-[9.5px] text-slate-900 truncate">
             {sorteo?.title || 'Sorteo Institucional'}
           </h4>
 
-          <div className="flex items-center gap-1 mt-0.5 text-[8px] text-slate-600">
+          <div className="flex items-center gap-1 mt-0.5 text-[7.5px] text-slate-600">
             {sorteo?.drawDate && (
               <span className="font-semibold text-slate-700 truncate">
-                Fecha: {sorteo.drawDate}
+                {sorteo.drawDate}
               </span>
             )}
             {sorteo?.prizes && sorteo.prizes[0] && (
-              <span className="text-amber-900 font-bold bg-amber-100/80 px-1 py-0.2 rounded truncate max-w-[90px] hidden xs:inline">
+              <span className="text-amber-900 font-bold bg-amber-100/80 px-1 py-0.2 rounded truncate max-w-[80px]">
                 🏆 {sorteo.prizes[0]}
               </span>
             )}
           </div>
+
+          {ticket?.participantName ? (
+            <div className="text-[7.5px] font-bold text-slate-800 truncate mt-0.5" title={ticket.participantName}>
+              👤 {ticket.participantName}
+            </div>
+          ) : (
+            <div className="text-[6.5px] text-slate-400 font-mono mt-0.5 truncate">
+              Nom: _________________
+            </div>
+          )}
         </div>
 
         {/* Lado derecho: Código y QR compacto */}
-        <div className="shrink-0 flex items-center gap-1.5 pl-1.5 border-l border-dashed border-slate-300 text-right">
+        <div className="shrink-0 flex items-center gap-1 pl-1 border-l border-dashed border-slate-300 text-right">
           <div>
-            <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider block">
+            <span className="text-[6.5px] font-bold text-slate-400 uppercase tracking-wider block">
               9 Dígitos
             </span>
-            <span className="font-mono font-black text-[10px] sm:text-[11px] text-slate-950 bg-slate-100 border border-slate-200 px-1 py-0.2 rounded tracking-wider block">
+            <span className="font-mono font-black text-[9.5px] sm:text-[10px] text-slate-950 bg-slate-100 border border-slate-200 px-1 py-0.2 rounded tracking-wider block">
               {formattedDisplayCode}
             </span>
           </div>
@@ -119,7 +129,7 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
           <div className="p-0.5 bg-white border border-slate-200 rounded shrink-0">
             <QRCodeSVG
               value={qrVerificationUrl}
-              size={36}
+              size={32}
               level="M"
               includeMargin={true}
             />

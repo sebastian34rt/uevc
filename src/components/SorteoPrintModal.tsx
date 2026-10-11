@@ -15,8 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSiteContent } from '../context/SiteContentContext';
 import { getPublicSiteUrl } from '../utils/domainConfig';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { generateSorteoTicketsPdf } from '../utils/sorteoPdfGenerator';
 
 interface SorteoPrintModalProps {
   isOpen: boolean;
@@ -38,17 +37,61 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
   const { t } = useTranslation();
   const { content } = useSiteContent();
 
-  // Densidad predeterminada en 'ultra' para máximo ahorro de papel
+  // Densidad predeterminada en 'ultra' (24 por hoja) para máximo ahorro de papel
   const [density, setDensity] = useState<TicketDensity>(defaultLayout);
-  const [columns, setColumns] = useState<'auto' | '2' | '3' | '4'>('auto');
+  const [columns, setColumns] = useState<'4' | '3'>('4');
   const [inkSaver, setInkSaver] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const printableRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPdf = () => {
-    // Usamos el diálogo de impresión nativo del navegador, el cual soporta oklch()
-    // y permite guardar directamente como PDF vectorial con máxima nitidez.
-    window.print();
+  // Si solo se imprimirá 1 boleto, ofrecer la opción de llenar la hoja completa con 24 copias
+  const [fillSheetMode, setFillSheetMode] = useState<boolean>(tickets.length === 1);
+
+  // Efecto para activar clase especial de impresión en el body
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('printing-modal');
+      return () => {
+        document.body.classList.remove('printing-modal');
+      };
+    }
+  }, [isOpen]);
+
+  // Boletos efectivos a renderizar: si solo se seleccionó 1 boleto y está en modo llenar hoja, multiplicarlo para llenar la hoja
+  const effectiveTickets = React.useMemo(() => {
+    if (fillSheetMode && tickets.length === 1) {
+      const targetCount = density === 'ultra' 
+        ? (columns === '3' ? 18 : 24) 
+        : density === 'micro' 
+        ? 12 
+        : density === 'compact' 
+        ? 8 
+        : 4;
+      return Array.from({ length: targetCount }, (_, i) => ({
+        ...tickets[0],
+        id: `${tickets[0].id}_rep_${i}`
+      }));
+    }
+    return tickets;
+  }, [tickets, fillSheetMode, density, columns]);
+
+  const handleDownloadPdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      await generateSorteoTicketsPdf({
+        tickets: effectiveTickets,
+        sorteoMap,
+        schoolName: content.schoolName || content.shortName || 'U.E. Virgen del Cisne',
+        density,
+        columns
+      });
+    } catch (err) {
+      console.error('Error generando PDF:', err);
+      // Fallback nativo a impresión del navegador en caso de cualquier detalle
+      window.print();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // Mapeo rápido de sorteos por ID
@@ -62,15 +105,15 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
 
   // Cálculo de hojas estimadas según la densidad elegida
   const capacityPerSheet: Record<TicketDensity, number> = {
-    ultra: columns === '4' ? 24 : 18,
+    ultra: columns === '3' ? 18 : 24,
     micro: 12,
     compact: 8,
     standard: 4,
     large: 2
   };
 
-  const estimatedSheets = Math.ceil(tickets.length / capacityPerSheet[density]);
-  const maxSheets = Math.ceil(tickets.length / capacityPerSheet['large']);
+  const estimatedSheets = Math.ceil(effectiveTickets.length / capacityPerSheet[density]);
+  const maxSheets = Math.ceil(effectiveTickets.length / capacityPerSheet['large']);
   const savedSheets = Math.max(0, maxSheets - estimatedSheets);
 
   // Manejo de teclado (Escape para cerrar, Ctrl+P para imprimir)
@@ -99,7 +142,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
       id="sorteo-print-modal-container"
     >
       <div 
-        className={`bg-white rounded-3xl w-full max-w-5xl max-h-[94vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden print:max-h-none print:max-w-none print:border-none print:shadow-none print:rounded-none print:w-full ${
+        className={`bg-white rounded-3xl w-full max-w-5xl max-h-[94vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden print-modal-inner print:max-h-none print:max-w-none print:border-none print:shadow-none print:rounded-none print:w-full print:block ${
           inkSaver ? 'ink-saver-mode' : ''
         }`}
       >
@@ -116,18 +159,18 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                 </h3>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
                   <ShieldCheck className="w-3 h-3 text-amber-700" />
-                  {tickets.length} {tickets.length === 1 ? 'boleto' : 'boletos'}
+                  {effectiveTickets.length} {effectiveTickets.length === 1 ? 'boleto' : 'boletos'}
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <FileText className="w-3 h-3 text-emerald-700" />
-                  ≈ {estimatedSheets} {estimatedSheets === 1 ? 'hoja' : 'hojas'}
+                  ≈ {estimatedSheets} {estimatedSheets === 1 ? 'hoja (24 por hoja)' : 'hojas'}
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200" title="Dominio web al que ingresan las personas al escanear el código QR">
                   📱 QR destino: {getPublicSiteUrl(content.publicDomain)}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Boletos oficiales con logo institucional, código de seguridad de 9 dígitos y código QR de validación. Formato compacto de máximo ahorro de papel para no sacar muchas hojas.
+                Distribución optimizada: <strong>24 boletos por hoja A4 / Carta</strong>. Al pulsar Imprimir, el navegador generará la cuadrícula exacta sin partir los boletos ni gastar hojas extra.
               </p>
             </div>
           </div>
@@ -138,9 +181,14 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
               onClick={handleDownloadPdf}
               disabled={isGeneratingPdf}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              title="Descargar archivo PDF vectorial oficial de 24 boletos por hoja"
             >
-              <Download className="w-4 h-4" />
-              <span>{isGeneratingPdf ? 'Generando PDF...' : 'Descargar PDF'}</span>
+              {isGeneratingPdf ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>{isGeneratingPdf ? 'Generando PDF...' : 'Guardar PDF'}</span>
             </button>
             <button
               type="button"
@@ -160,6 +208,29 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* NOTA CONDICIONAL PARA 1 SOLO BOLETO */}
+        {tickets.length === 1 && (
+          <div className="px-4 sm:px-6 py-2.5 bg-amber-50 border-b border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 print:hidden">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                Has seleccionado <strong>1 solo boleto</strong>. Puedes imprimirlo en una esquina o llenar la hoja con <strong>24 boletos iguales</strong> para recortar y no desperdiciar la hoja de papel.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFillSheetMode(!fillSheetMode)}
+              className={`px-3 py-1 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                fillSheetMode 
+                  ? 'bg-amber-600 text-white hover:bg-amber-700' 
+                  : 'bg-white text-amber-900 border border-amber-300 hover:bg-amber-100'
+              }`}
+            >
+              {fillSheetMode ? '✓ Llenando Hoja (24 Boletos)' : 'Cambiar a Llenar Hoja (24)'}
+            </button>
+          </div>
+        )}
 
         {/* BARRA DE CONTROL DE DENSIDAD Y AHORRO DE PAPEL (OCULTA AL IMPRIMIR) */}
         <div className="px-4 sm:px-6 py-3 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
@@ -245,12 +316,13 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                 <span className="text-[11px] font-bold text-slate-600">Columnas:</span>
                 <button
                   type="button"
-                  onClick={() => setColumns('auto')}
+                  onClick={() => setColumns('3')}
                   className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer ${
-                    columns === 'auto' ? 'bg-primario text-white' : 'text-slate-600 hover:bg-slate-200'
+                    columns === '3' ? 'bg-primario text-white' : 'text-slate-600 hover:bg-slate-200'
                   }`}
+                  title="3 columnas (18 boletos por hoja)"
                 >
-                  3 Col
+                  3 Col (18)
                 </button>
                 <button
                   type="button"
@@ -300,23 +372,24 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
             className={`printable-tickets-wrapper mx-auto max-w-5xl print:w-full print:max-w-none ${
               density === 'ultra'
                 ? columns === '4'
-                  ? 'grid grid-cols-2 sm:grid-cols-4 gap-1.5 print-grid-ultra-4col'
-                  : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 print-grid-ultra'
+                  ? 'print-grid-24 grid grid-cols-2 sm:grid-cols-4 gap-1.5'
+                  : 'print-grid-18 grid grid-cols-1 sm:grid-cols-3 gap-2'
                 : density === 'micro' 
-                ? 'grid grid-cols-1 sm:grid-cols-2 gap-2.5 print-grid-micro' 
+                ? 'print-grid-12 grid grid-cols-1 sm:grid-cols-2 gap-2.5' 
                 : density === 'compact'
-                ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 print-grid-compact'
+                ? 'print-grid-8 grid grid-cols-1 sm:grid-cols-2 gap-3'
                 : density === 'standard'
-                ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 print-grid-standard'
-                : 'space-y-4 print-grid-large'
+                ? 'print-grid-4 grid grid-cols-1 sm:grid-cols-2 gap-4'
+                : 'print-grid-large space-y-4'
             }`}
           >
-            {tickets.map((tkt, idx) => {
+            {effectiveTickets.map((tkt, idx) => {
               const raffle = sorteoMap[tkt.sorteoId];
               return (
                 <div 
                   key={tkt.id || idx}
-                  className="print-ticket-item relative"
+                  id={`print-ticket-${tkt.id || idx}`}
+                  className="ticket-wrapper-item print-ticket-item relative"
                 >
                   <SorteoTicketCard
                     ticket={tkt}
@@ -335,7 +408,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>
-              {tickets.length} {tickets.length === 1 ? 'boleto listo' : 'boletos listos'} en {estimatedSheets} {estimatedSheets === 1 ? 'hoja' : 'hojas'} ({density === 'micro' ? 'Máximo Ahorro' : density === 'compact' ? 'Económico' : density === 'standard' ? 'Estándar' : 'Grande'})
+              {effectiveTickets.length} {effectiveTickets.length === 1 ? 'boleto listo' : 'boletos listos'} en {estimatedSheets} {estimatedSheets === 1 ? 'hoja de papel' : 'hojas de papel'} ({density === 'ultra' ? `Ultra Mini ${columns === '4' ? '24' : '18'}/hoja` : density === 'micro' ? 'Máximo Ahorro 12/hoja' : density === 'compact' ? 'Económico 8/hoja' : 'Estándar 4/hoja'})
             </span>
           </div>
 
@@ -353,7 +426,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
               className="inline-flex items-center gap-2 px-5 py-2 bg-primario hover:bg-primario/90 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Imprimir {tickets.length} Boletos ({estimatedSheets} {estimatedSheets === 1 ? 'Hoja' : 'Hojas'})</span>
+              <span>Imprimir {effectiveTickets.length} Boletos ({estimatedSheets} {estimatedSheets === 1 ? 'Hoja' : 'Hojas'})</span>
             </button>
           </div>
         </div>

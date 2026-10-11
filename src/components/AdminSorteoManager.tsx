@@ -88,7 +88,6 @@ export const AdminSorteoManager: React.FC = () => {
   // Modal de Impresión dedicado y profesional
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [ticketsToPrint, setTicketsToPrint] = useState<SorteoTicket[]>([]);
-  const [printLayout, setPrintLayout] = useState<'standard' | 'sheet3'>('standard');
   const [printTitle, setPrintTitle] = useState('Planilla de Impresión de Boletos Oficiales');
 
   // Filtros de la Sección Central de Códigos Generados
@@ -1462,108 +1461,7 @@ export const AdminSorteoManager: React.FC = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: PLANILLA DE IMPRESIÓN PROFESIONAL DE BOLETOS                      */}
-      {/* ========================================================================= */}
-      {isPrintModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-xs p-4 flex flex-col items-center">
-          <div className="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl my-6 print:m-0 print:p-0 print:shadow-none print:w-full">
-            {/* Cabecera del Modal (se oculta al imprimir) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 mb-6 print:hidden gap-4">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-primario mb-1">
-                  <Printer className="w-4 h-4" />
-                  Módulo de Impresión Oficial
-                </div>
-                <h3 className="font-serif font-black text-xl text-slate-900">
-                  {printTitle}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Total de boletos listos para impresión: {ticketsToPrint.length}. Cada boleto incluye el logo institucional, código QR de verificación de la página y código de 9 dígitos.
-                </p>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
-                {/* Selector de disposición de impresión */}
-                <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setPrintLayout('standard')}
-                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                      printLayout === 'standard' ? 'bg-white shadow-2xs text-primario' : 'text-slate-600'
-                    }`}
-                  >
-                    Formato Completo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPrintLayout('sheet3')}
-                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                      printLayout === 'sheet3' ? 'bg-white shadow-2xs text-primario' : 'text-slate-600'
-                    }`}
-                  >
-                    Planilla Económica (3x Hoja)
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primario text-white rounded-xl font-bold text-sm hover:bg-primario/90 transition-all shadow-md cursor-pointer active:scale-95"
-                >
-                  <Printer className="w-4 h-4" />
-                  Imprimir Ahora
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsPrintModalOpen(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 rounded-xl cursor-pointer"
-                  title="Cerrar vista previa"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            {/* Aviso informativo de impresión para el usuario */}
-            <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-center justify-between print:hidden">
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>
-                  <strong>Tip de Impresión:</strong> Los boletos en blanco incluyen líneas de llenado manual para que anotes a mano el nombre, cédula y teléfono al momento de entregarlos.
-                </span>
-              </span>
-            </div>
-
-            {/* CONTENEDOR DE IMPRESIÓN (AQUÍ ACTÚA EL CSS @media print) */}
-            <div className="printable-tickets-wrapper space-y-4 print:space-y-6">
-              {ticketsToPrint.map((ticket) => (
-                <div key={ticket.id} className="print-ticket-item break-inside-avoid">
-                  <SorteoTicketCard
-                    ticket={ticket}
-                    sorteo={sorteoMap[ticket.sorteoId]}
-                    compact={printLayout === 'sheet3'}
-                    showPrintFields={true}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* Pie del modal */}
-            <div className="mt-8 pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 print:hidden">
-              <span>{ticketsToPrint.length} boletos preparados</span>
-              <button
-                type="button"
-                onClick={() => setIsPrintModalOpen(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors cursor-pointer"
-              >
-                Cerrar Planilla
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================================= */}
       {/* MODAL: CREAR / EDITAR SORTEO                                              */}
