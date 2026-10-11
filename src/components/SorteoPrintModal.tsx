@@ -163,14 +163,18 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <FileText className="w-3 h-3 text-emerald-700" />
-                  ≈ {estimatedSheets} {estimatedSheets === 1 ? 'hoja (24 por hoja)' : 'hojas'}
+                  ≈ {estimatedSheets} {estimatedSheets === 1 ? `hoja (${capacityPerSheet[density]} por hoja)` : 'hojas'}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200" title="Diseño oficial de talonario con talón de control para el ánfora y sección recortable para el comprador">
+                  <Scissors className="w-3 h-3 text-purple-700" />
+                  Talón de Datos + ✂ Recorte + QR
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200" title="Dominio web al que ingresan las personas al escanear el código QR">
                   📱 QR destino: {getPublicSiteUrl(content.publicDomain)}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Distribución optimizada: <strong>24 boletos por hoja A4 / Carta</strong>. Al pulsar Imprimir, el navegador generará la cuadrícula exacta sin partir los boletos ni gastar hojas extra.
+                Formato Talonario Oficial: <strong>Talón de datos</strong> para el ánfora / vendedor + <strong>Línea de recortar ✂</strong> + <strong>Boleto con QR y código de 9 dígitos</strong> que se entrega al comprador.
               </p>
             </div>
           </div>
@@ -249,7 +253,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="18 a 24 boletos por hoja en 3 o 4 columnas: ultra compacto para no sacar muchas hojas"
+                title="18 a 24 boletos por hoja en 3 o 4 columnas: ultra compacto con talón mini + corte + QR"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Ultra Mini (18-24 por hoja)</span>
@@ -260,51 +264,51 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                 onClick={() => setDensity('micro')}
                 className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
                   density === 'micro'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="10 a 12 boletos por hoja en 2 columnas: formato micro"
+                title="12 boletos por hoja en 2 columnas: formato talonario con talón cómodo para escribir + corte + QR"
               >
-                <span>Micro (10-12 por hoja)</span>
+                <span>Talonario Micro (12 por hoja)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDensity('compact')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
                   density === 'compact'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="6 a 8 boletos por hoja en 2 columnas"
+                title="8 boletos por hoja en 2 columnas (66mm de alto) con talón amplio"
               >
-                Económico (6-8)
+                <span>Talonario Económico (8)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDensity('standard')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
                   density === 'standard'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="4 boletos por hoja"
+                title="4 boletos grandes por hoja con talón completo"
               >
-                Estándar (4)
+                <span>Talonario Estándar (4)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDensity('large')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
                   density === 'large'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="1 a 2 boletos grandes con talón perforado"
+                title="1 a 2 boletos grandes con talón perforado de ánfora"
               >
-                Grande (1-2)
+                <span>Grande (1-2)</span>
               </button>
             </div>
           </div>
