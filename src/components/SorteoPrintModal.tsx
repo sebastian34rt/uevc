@@ -15,7 +15,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSiteContent } from '../context/SiteContentContext';
 import { getPublicSiteUrl } from '../utils/domainConfig';
-import { generateSorteoTicketsPdf } from '../utils/sorteoPdfGenerator';
 
 interface SorteoPrintModalProps {
   isOpen: boolean;
@@ -41,7 +40,6 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
   const [density, setDensity] = useState<TicketDensity>(defaultLayout);
   const [columns, setColumns] = useState<'4' | '3'>('4');
   const [inkSaver, setInkSaver] = useState(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const printableRef = useRef<HTMLDivElement>(null);
 
   // Si solo se imprimirá 1 boleto, ofrecer la opción de llenar la hoja completa con 24 copias
@@ -75,23 +73,13 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
     return tickets;
   }, [tickets, fillSheetMode, density, columns]);
 
-  const handleDownloadPdf = async () => {
-    try {
-      setIsGeneratingPdf(true);
-      await generateSorteoTicketsPdf({
-        tickets: effectiveTickets,
-        sorteoMap,
-        schoolName: content.schoolName || content.shortName || 'U.E. Virgen del Cisne',
-        density,
-        columns
-      });
-    } catch (err) {
-      console.error('Error generando PDF:', err);
-      // Fallback nativo a impresión del navegador en caso de cualquier detalle
-      window.print();
-    } finally {
-      setIsGeneratingPdf(false);
-    }
+  // Imprimir o Guardar como PDF tal y como sale en la pantalla sin cambiar nada
+  const handleDownloadPdf = () => {
+    window.print();
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   // Mapeo rápido de sorteos por ID
@@ -131,10 +119,6 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
   }, [isOpen, onClose]);
 
   if (!isOpen || tickets.length === 0) return null;
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   return (
     <div 
@@ -183,21 +167,17 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
             <button
               type="button"
               onClick={handleDownloadPdf}
-              disabled={isGeneratingPdf}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
-              title="Descargar archivo PDF vectorial oficial de 24 boletos por hoja"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              title="Guardar como PDF tal y como sale en la pantalla (selecciona 'Guardar como PDF' en Destino)"
             >
-              {isGeneratingPdf ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-              <span>{isGeneratingPdf ? 'Generando PDF...' : 'Guardar PDF'}</span>
+              <Download className="w-4 h-4 text-emerald-400" />
+              <span>Guardar como PDF</span>
             </button>
             <button
               type="button"
               onClick={handlePrint}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-primario hover:bg-primario/90 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              title="Imprimir boletos directamente en papel"
             >
               <Printer className="w-4 h-4" />
               <span>Imprimir Ahora</span>
@@ -430,7 +410,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
               className="inline-flex items-center gap-2 px-5 py-2 bg-primario hover:bg-primario/90 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Imprimir {effectiveTickets.length} Boletos ({estimatedSheets} {estimatedSheets === 1 ? 'Hoja' : 'Hojas'})</span>
+              <span>Imprimir / Guardar PDF ({effectiveTickets.length} Boletos • {estimatedSheets} {estimatedSheets === 1 ? 'Hoja' : 'Hojas'})</span>
             </button>
           </div>
         </div>
