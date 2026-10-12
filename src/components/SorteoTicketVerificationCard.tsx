@@ -6,53 +6,33 @@ import {
   AlertTriangle, 
   Copy, 
   Check, 
-  Calendar, 
   User, 
   Phone, 
   Mail,
-  Tag, 
-  Printer, 
-  RotateCcw, 
-  FileText, 
   Lock, 
-  ChevronDown, 
-  ChevronUp, 
   Sparkles, 
-  Trash2, 
-  Edit3,
   UserCheck,
   AlertCircle
 } from 'lucide-react';
 import { Sorteo, SorteoTicket } from '../types/sorteo';
 import { formatTicketCodeDisplay, normalizeTicketCode } from '../utils/sorteoSecurity';
 import { useSorteos } from '../context/SorteoContext';
-import { SorteoTicketCard } from './SorteoTicketCard';
 
 interface SorteoTicketVerificationCardProps {
   ticket: SorteoTicket;
   sorteo?: Sorteo;
-  onResetSearch?: () => void;
-  onPrintTicket?: (ticket: SorteoTicket) => void;
-  onEditTicket?: (ticket: SorteoTicket) => void;
-  onDeleteTicket?: (ticket: SorteoTicket) => void;
   isAdmin?: boolean;
 }
 
 export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCardProps> = ({
   ticket,
   sorteo,
-  onResetSearch,
-  onPrintTicket,
-  onEditTicket,
-  onDeleteTicket,
   isAdmin = false
 }) => {
   const { registerTicket } = useSorteos();
   const [copied, setCopied] = useState(false);
-  const [showFullPhysicalTicket, setShowFullPhysicalTicket] = useState(false);
-  const [isEditingRegistration, setIsEditingRegistration] = useState(false);
 
-  // Estados del formulario de registro único
+  // Estados del formulario de registro único cuando el boleto no está registrado
   const [regName, setRegName] = useState(ticket.participantName === 'Al Portador' ? '' : (ticket.participantName || ''));
   const [regPhone, setRegPhone] = useState(ticket.participantPhone || '');
   const [regEmail, setRegEmail] = useState(ticket.participantEmail || '');
@@ -66,7 +46,7 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
   const isWinner = ticket.status === 'winner' || 
     (sorteo?.winnerTicketCode && normalizeTicketCode(sorteo.winnerTicketCode) === cleanCode);
 
-  // Un boleto se considera registrado si tiene isRegistered o si tiene un nombre real asignado
+  // Un boleto se considera registrado si tiene isRegistered o si tiene un titular asignado diferente a 'Al Portador'
   const isRegistered = Boolean(
     ticket.isRegistered || 
     (ticket.participantName && ticket.participantName.trim() !== '' && ticket.participantName.trim() !== 'Al Portador')
@@ -109,27 +89,12 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
         participantEmail: email
       });
       setRegSuccess(true);
-      setIsEditingRegistration(false);
     } catch (err: any) {
       setRegError(err.message || 'Error al registrar los datos del boleto');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const registeredDateStr = ticket.registeredAt 
-    ? new Date(ticket.registeredAt).toLocaleDateString('es-EC', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    : new Date(ticket.createdAt).toLocaleDateString('es-EC', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
@@ -245,7 +210,7 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
 
           {/* NOTIFICACIÓN DE ÉXITO DE REGISTRO */}
           {regSuccess && (
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 flex items-center gap-3 shadow-sm animate-fade-in">
+            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 flex items-center gap-3 shadow-sm">
               <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
                 <Check className="w-5 h-5" />
               </div>
@@ -256,8 +221,25 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
             </div>
           )}
 
-          {/* SECCIÓN DE REGISTRO DE DATOS ÚNICOS */}
-          {(!isRegistered || isEditingRegistration) ? (
+          {/* SI YA ESTÁ REGISTRADO: SOLO SALE REGISTRADO POR Y YA */}
+          {isRegistered ? (
+            <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">
+                    Boleto Registrado
+                  </span>
+                  <h4 className="font-serif font-black text-base sm:text-lg text-emerald-950">
+                    Registrado por: {ticket.participantName}
+                  </h4>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* SECCIÓN DE REGISTRO DE DATOS ÚNICOS PARA BOLETOS AL PORTADOR */
             <div className="p-6 rounded-2xl bg-amber-50/70 border-2 border-amber-300 text-slate-800 space-y-4">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -265,7 +247,7 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
                 </div>
                 <div>
                   <h4 className="font-serif font-black text-base text-amber-950">
-                    {isEditingRegistration ? 'Actualizar Datos del Boleto Único' : 'Registrar este Boleto a tu Nombre (Único e Intransferible)'}
+                    Registrar este Boleto a tu Nombre (Único e Intransferible)
                   </h4>
                   <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
                     Ingresa tu <strong>nombre completo</strong>, <strong>número de celular</strong> y <strong>correo electrónico</strong> para asegurar tu participación única en el sorteo.
@@ -334,11 +316,11 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 pt-1">
+                <div className="pt-1">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <span>Guardando Registro Único...</span>
@@ -349,180 +331,10 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
                       </>
                     )}
                   </button>
-
-                  {isEditingRegistration && (
-                    <button
-                      type="button"
-                      onClick={() => setIsEditingRegistration(false)}
-                      className="px-4 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
-                    >
-                      Cancelar
-                    </button>
-                  )}
                 </div>
               </form>
             </div>
-          ) : (
-            /* FICHA DE DATOS DEL BOLETO YA REGISTRADO Y ÚNICO */
-            <div className="space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {/* Sorteo Asociado */}
-                <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
-                  <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
-                    <Tag className="w-3.5 h-3.5 text-primario" />
-                    <span>Sorteo Asociado</span>
-                  </div>
-                  <p className="font-bold text-slate-900 text-sm truncate">
-                    {sorteo?.title || 'Sorteo Institucional'}
-                  </p>
-                  {sorteo?.drawDate && (
-                    <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
-                      Fecha: {sorteo.drawDate}
-                    </p>
-                  )}
-                </div>
-
-                {/* Participante Registrado */}
-                <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
-                  <div className="flex items-center justify-between gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Titular Registrado</span>
-                    </div>
-                    <span className="text-[10px] text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full">
-                      Único
-                    </span>
-                  </div>
-                  <p className="font-bold text-slate-900 text-sm truncate">
-                    {ticket.participantName}
-                  </p>
-                  <div className="text-xs text-slate-600 mt-1 space-y-0.5">
-                    {ticket.participantPhone && (
-                      <p className="flex items-center gap-1 text-[11px] truncate">
-                        <Phone className="w-3 h-3 text-slate-400" />
-                        <span>Celular: {ticket.participantPhone}</span>
-                      </p>
-                    )}
-                    {ticket.participantEmail && (
-                      <p className="flex items-center gap-1 text-[11px] truncate">
-                        <Mail className="w-3 h-3 text-slate-400" />
-                        <span>Correo: {ticket.participantEmail}</span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Emisión y Talonario */}
-                {ticket.sellerName && (
-                  <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
-                      <FileText className="w-3.5 h-3.5 text-primario" />
-                      <span>Vendedor / Responsable</span>
-                    </div>
-                    <p className="font-bold text-slate-900 text-sm truncate">
-                      {ticket.sellerName}
-                    </p>
-                  </div>
-                )}
-
-                {/* Sello de Seguridad y Registro Único */}
-                <div className="bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-200/70 sm:col-span-2">
-                  <div className="flex items-center justify-between text-emerald-800 text-xs font-bold uppercase mb-1">
-                    <span className="flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      Registro Único Asegurado
-                    </span>
-                    <span className="text-[10px] text-emerald-700 font-mono">REG-{ticket.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}</span>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Registrado de forma única e intransferible el <strong>{registeredDateStr}</strong>. Este boleto está protegido en la base de datos oficial.
-                  </p>
-                  {isAdmin && (
-                    <button
-                      type="button"
-                      onClick={() => setIsEditingRegistration(true)}
-                      className="mt-2 text-[11px] font-bold text-primario hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                      <span>Modificar datos registrados del titular (Admin)</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
           )}
-
-          {/* BOTONES DE ACCIÓN */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
-            {onResetSearch && (
-              <button
-                type="button"
-                onClick={onResetSearch}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>Verificar Otro Boleto</span>
-              </button>
-            )}
-
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              {onPrintTicket && (
-                <button
-                  type="button"
-                  onClick={() => onPrintTicket(ticket)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-primario text-white text-xs font-bold rounded-xl shadow-xs hover:bg-primario/90 transition-all cursor-pointer"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Imprimir Boleto</span>
-                </button>
-              )}
-
-              {isAdmin && onEditTicket && (
-                <button
-                  type="button"
-                  onClick={() => onEditTicket(ticket)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                  title="Editar datos"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-              )}
-
-              {isAdmin && onDeleteTicket && (
-                <button
-                  type="button"
-                  onClick={() => onDeleteTicket(ticket)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                  title="Eliminar boleto"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* OPCIÓN COLAPSABLE: VER TALONARIO FÍSICO COMPLETO */}
-          <div className="pt-2 text-center border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => setShowFullPhysicalTicket(!showFullPhysicalTicket)}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-primario transition-colors cursor-pointer"
-            >
-              <span>{showFullPhysicalTicket ? 'Ocultar cupón físico recortable' : '¿Deseas ver el talón físico completo?'}</span>
-              {showFullPhysicalTicket ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
-            {showFullPhysicalTicket && (
-              <div className="mt-4 pt-4 border-t border-dashed border-slate-200 text-left">
-                <SorteoTicketCard
-                  ticket={ticket}
-                  sorteo={sorteo}
-                  onPrint={() => onPrintTicket?.(ticket)}
-                />
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

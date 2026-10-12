@@ -3,9 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSorteos } from '../context/SorteoContext';
 import { useSiteContent } from '../context/SiteContentContext';
-import { SorteoTicketCard } from './SorteoTicketCard';
 import { SorteoTicketVerificationCard } from './SorteoTicketVerificationCard';
-import { SorteoPrintModal } from './SorteoPrintModal';
 import { 
   Trophy, 
   Search, 
@@ -17,22 +15,17 @@ import {
   ArrowRight,
   ShieldCheck,
   Ticket as TicketIcon,
-  Printer,
-  Hash,
-  Trash2,
-  AlertTriangle,
-  ShieldAlert,
   Lock,
   Phone,
   QrCode
 } from 'lucide-react';
 import SEO from './SEO';
 import { useAuth } from '../context/AuthContext';
-import { normalizeTicketCode, formatTicketCodeDisplay } from '../utils/sorteoSecurity';
+import { normalizeTicketCode } from '../utils/sorteoSecurity';
 
 export const SorteosPublicPage: React.FC = () => {
   const { t } = useTranslation();
-  const { sorteos, tickets, loading, deleteTicket } = useSorteos();
+  const { sorteos, tickets } = useSorteos();
   const { content } = useSiteContent();
   const { isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
@@ -40,15 +33,6 @@ export const SorteosPublicPage: React.FC = () => {
   const [ticketSearchCode, setTicketSearchCode] = useState('');
   const [searchedTicket, setSearchedTicket] = useState<any | null>(null);
   const [searchPerformed, setSearchPerformed] = useState(false);
-
-  // Estado del Modal de Impresión
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [ticketsToPrint, setTicketsToPrint] = useState<any[]>([]);
-  const [printTitle, setPrintTitle] = useState('Planilla Oficial de Boletos');
-
-  // Estado del Modal de Eliminación
-  const [ticketToDelete, setTicketToDelete] = useState<any | null>(null);
-  const [isDeletingTicket, setIsDeletingTicket] = useState(false);
   const searchSectionRef = useRef<HTMLDivElement>(null);
 
   // Auto-búsqueda si viene con parámetro ?ticket= en la URL (por ejemplo escaneando el QR)
@@ -88,29 +72,6 @@ export const SorteosPublicPage: React.FC = () => {
       return false;
     });
     setSearchedTicket(found || null);
-  };
-
-  const handlePrintSingle = (ticket: any) => {
-    setTicketsToPrint([ticket]);
-    const raffle = sorteos.find(s => s.id === ticket.sorteoId);
-    setPrintTitle(`Boleto Oficial #${formatTicketCodeDisplay(ticket.ticketCode)} - ${raffle?.title || 'Sorteo Institucional'}`);
-    setIsPrintModalOpen(true);
-  };
-
-  const handleConfirmDeleteTicket = async () => {
-    if (!ticketToDelete) return;
-    setIsDeletingTicket(true);
-    try {
-      await deleteTicket(ticketToDelete.id);
-      if (searchedTicket?.id === ticketToDelete.id) {
-        setSearchedTicket(null);
-      }
-      setTicketToDelete(null);
-    } catch (err) {
-      console.error('Error deleting ticket:', err);
-    } finally {
-      setIsDeletingTicket(false);
-    }
   };
 
   const activeSorteos = sorteos.filter(s => s.status === 'active');
@@ -227,13 +188,6 @@ export const SorteosPublicPage: React.FC = () => {
                 <SorteoTicketVerificationCard
                   ticket={liveSearchedTicket}
                   sorteo={sorteos.find(s => s.id === liveSearchedTicket.sorteoId)}
-                  onResetSearch={() => {
-                    setTicketSearchCode('');
-                    setSearchedTicket(null);
-                    setSearchPerformed(false);
-                  }}
-                  onPrintTicket={() => handlePrintSingle(liveSearchedTicket)}
-                  onDeleteTicket={isAuthenticated ? () => setTicketToDelete(liveSearchedTicket) : undefined}
                   isAdmin={isAuthenticated}
                 />
               ) : (
@@ -473,72 +427,7 @@ export const SorteosPublicPage: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL DE IMPRESIÓN OFICIAL DE BOLETOS */}
-      {isPrintModalOpen && (
-        <SorteoPrintModal
-          isOpen={isPrintModalOpen}
-          onClose={() => setIsPrintModalOpen(false)}
-          tickets={ticketsToPrint}
-          sorteos={sorteos}
-          title={printTitle}
-        />
-      )}
 
-      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE BOLETO */}
-      {ticketToDelete && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-xs p-4 flex items-center justify-center animate-fade-in print:hidden">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-100 relative overflow-hidden">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-rose-600" />
-            </div>
-
-            <h3 className="text-xl font-serif font-black text-slate-900 mb-2">
-              ¿Eliminar Boleto #{formatTicketCodeDisplay(ticketToDelete.ticketCode)}?
-            </h3>
-
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-5">
-              El código de 9 dígitos ({ticketToDelete.ticketCode}) quedará revocado y eliminado de los registros oficiales de la institución.
-            </p>
-
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl mb-6 flex items-start gap-2.5">
-              <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-rose-800 font-medium leading-snug">
-                Esta acción eliminará permanentemente el registro de Firebase. No se puede deshacer.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setTicketToDelete(null)}
-                disabled={isDeletingTicket}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmDeleteTicket}
-                disabled={isDeletingTicket}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-              >
-                {isDeletingTicket ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Eliminando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" />
-                    <span>Sí, Eliminar Boleto</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
