@@ -37,8 +37,11 @@ import {
   ArrowRight,
   User,
   Phone,
-  Mail
+  Mail,
+  FileSpreadsheet,
+  Upload
 } from 'lucide-react';
+import { AdminSorteoCsvManager } from './AdminSorteoCsvManager';
 import { useSiteContent } from '../context/SiteContentContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -67,8 +70,8 @@ export const AdminSorteoManager: React.FC = () => {
 
   const { content } = useSiteContent();
 
-  // Pestaña principal: 'codigos' (Sección de códigos generados y procedencia) | 'sorteos' (Gestión y ruleta)
-  const [activeTab, setActiveTab] = useState<'codigos' | 'sorteos'>('codigos');
+  // Pestaña principal: 'codigos' | 'sorteos' | 'carga-csv' (Carga masiva CSV y organizador de talonarios)
+  const [activeTab, setActiveTab] = useState<'codigos' | 'sorteos' | 'carga-csv'>('codigos');
 
   // Sorteo seleccionado en la pestaña de gestión de sorteos
   const [selectedSorteoId, setSelectedSorteoId] = useState<string>(
@@ -635,6 +638,15 @@ export const AdminSorteoManager: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
+            onClick={() => setActiveTab('carga-csv')}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-sm transition-all active:scale-95 cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Cargar CSV & Talonarios
+          </button>
+
+          <button
+            type="button"
             onClick={handleOpenBatchModal}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs uppercase tracking-wider shadow-sm transition-all active:scale-95 cursor-pointer"
           >
@@ -654,11 +666,11 @@ export const AdminSorteoManager: React.FC = () => {
       </div>
 
       {/* NAVEGACIÓN POR PESTAÑAS */}
-      <div className="flex border-b border-slate-200 bg-white rounded-2xl px-2 pt-2 shadow-2xs">
+      <div className="flex border-b border-slate-200 bg-white rounded-2xl px-2 pt-2 shadow-2xs overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab('codigos')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'codigos'
               ? 'border-primario text-primario'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -676,7 +688,7 @@ export const AdminSorteoManager: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('sorteos')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'sorteos'
               ? 'border-primario text-primario'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -688,6 +700,24 @@ export const AdminSorteoManager: React.FC = () => {
             activeTab === 'sorteos' ? 'bg-primario text-white' : 'bg-slate-100 text-slate-600'
           }`}>
             {sorteos.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('carga-csv')}
+          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'carga-csv'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          <span>Carga Masiva CSV & Talonarios</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-black ${
+            activeTab === 'carga-csv' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-700'
+          }`}>
+            Avanzado
           </span>
         </button>
       </div>
@@ -1461,7 +1491,25 @@ export const AdminSorteoManager: React.FC = () => {
         </div>
       )}
 
-
+      {/* ========================================================================= */}
+      {/* SECCIÓN 3: PANEL AVANZADO DE CARGA MASIVA CSV & ORGANIZACIÓN PARA IMPRESIÓN */}
+      {/* ========================================================================= */}
+      {activeTab === 'carga-csv' && (
+        <AdminSorteoCsvManager
+          sorteos={sorteos}
+          tickets={tickets}
+          selectedSorteoId={selectedSorteoId || (sorteos[0]?.id || '')}
+          onSelectSorteoId={setSelectedSorteoId}
+          onBatchCreateTickets={batchCreateTickets}
+          onPrintTickets={(printTicketsList, customTitle) => {
+            setTicketsToPrint(printTicketsList);
+            setPrintTitle(customTitle);
+            setIsPrintModalOpen(true);
+          }}
+          showNotification={showNotification}
+          onOpenCreateSorteo={() => handleOpenSorteoModal()}
+        />
+      )}
 
       {/* ========================================================================= */}
       {/* MODAL: CREAR / EDITAR SORTEO                                              */}

@@ -23,4 +23,7 @@ export interface SorteoTicket {
   status: 'active' | 'winner' | 'cancelled';
   createdAt: string;
   notes?: string;
+  sellerName?: string;
+  bookNumber?: number;
+  batchId?: string;
 }

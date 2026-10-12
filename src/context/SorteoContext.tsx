@@ -111,18 +111,23 @@ export const SorteoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const batchCreateTickets = async (items: Array<Omit<SorteoTicket, 'id' | 'createdAt'>>) => {
-    const batch = writeBatch(db);
+    const CHUNK_SIZE = 400;
     const now = new Date().toISOString();
-    items.forEach((item, index) => {
-      const id = 'tkt_' + Date.now() + '_' + index + '_' + Math.random().toString(36).substring(2, 6);
-      const ticket: SorteoTicket = {
-        ...item,
-        id,
-        createdAt: now
-      };
-      batch.set(doc(db, 'sorteo_tickets', id), ticket);
-    });
-    await batch.commit();
+    
+    for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+      const chunk = items.slice(i, i + CHUNK_SIZE);
+      const batch = writeBatch(db);
+      chunk.forEach((item, index) => {
+        const id = 'tkt_' + Date.now() + '_' + (i + index) + '_' + Math.random().toString(36).substring(2, 6);
+        const ticket: SorteoTicket = {
+          ...item,
+          id,
+          createdAt: now
+        };
+        batch.set(doc(db, 'sorteo_tickets', id), ticket);
+      });
+      await batch.commit();
+    }
   };
 
   const updateTicket = async (id: string, updates: Partial<SorteoTicket>) => {
@@ -136,11 +141,15 @@ export const SorteoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const clearTicketsForSorteo = async (sorteoId: string) => {
     const toDelete = tickets.filter(t => t.sorteoId === sorteoId);
     if (toDelete.length === 0) return;
-    const batch = writeBatch(db);
-    toDelete.forEach(t => {
-      batch.delete(doc(db, 'sorteo_tickets', t.id));
-    });
-    await batch.commit();
+    const CHUNK_SIZE = 400;
+    for (let i = 0; i < toDelete.length; i += CHUNK_SIZE) {
+      const chunk = toDelete.slice(i, i + CHUNK_SIZE);
+      const batch = writeBatch(db);
+      chunk.forEach(t => {
+        batch.delete(doc(db, 'sorteo_tickets', t.id));
+      });
+      await batch.commit();
+    }
   };
 
   const setSorteoWinner = async (
