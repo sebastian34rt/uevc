@@ -390,7 +390,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                 <div 
                   key={tkt.id || idx}
                   id={`print-ticket-${tkt.id || idx}`}
-                  className="ticket-wrapper-item print-ticket-item relative"
+                  className="ticket-wrapper-item relative"
                 >
                   <SorteoTicketCard
                     ticket={tkt}

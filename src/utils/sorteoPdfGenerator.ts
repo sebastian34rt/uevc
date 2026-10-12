@@ -65,7 +65,7 @@ export async function generateSorteoTicketsPdf({
 
   // CAPTURA 100% FIEL DE LA PANTALLA: Si se proporciona el contenedor con los boletos renderizados
   if (containerElement) {
-    const ticketNodes = Array.from(containerElement.querySelectorAll<HTMLElement>('.print-ticket-item'));
+    const ticketNodes = Array.from(containerElement.querySelectorAll<HTMLElement>('.ticket-wrapper-item'));
     if (ticketNodes.length > 0) {
       try {
         const doc = new jsPDF({
@@ -148,20 +148,27 @@ export async function generateSorteoTicketsPdf({
           const x = marginX + col * (ticketW + gapX);
           const y = marginY + row * (ticketH + gapY);
 
+          // Capturar elemento DOM con html2canvas preservando calidad 2.5x
           const canvas = await html2canvas(node, {
             scale: 2.5,
             useCORS: true,
+            allowTaint: true,
             logging: false,
             backgroundColor: '#ffffff'
           });
+
+          // Mantener relación de aspecto natural del boleto para no deformar texto ni QR
+          const nodeAspect = canvas.width / canvas.height;
+          const targetH = Math.min(ticketH, ticketW / nodeAspect);
+
           const imgData = canvas.toDataURL('image/png');
-          doc.addImage(imgData, 'PNG', x, y, ticketW, ticketH, undefined, 'FAST');
+          doc.addImage(imgData, 'PNG', x, y, ticketW, targetH, undefined, 'FAST');
         }
 
         doc.save(`boletos_sorteo_${Date.now()}.pdf`);
         return;
       } catch (err) {
-        console.warn('Error en captura html2canvas, usando generador vectorial nativo:', err);
+        console.warn('Error en captura html2canvas, usando generador vectorial horizontal fiel:', err);
       }
     }
   }
@@ -213,11 +220,11 @@ export async function generateSorteoTicketsPdf({
     ticketHeight = 66;
     marginX = 7.5;
   } else if (density === 'standard') {
-    cols = 2;
-    rows = 2;
-    ticketWidth = 96;
-    ticketHeight = 132;
-    marginX = 7.5;
+    cols = 1;
+    rows = 4;
+    ticketWidth = 194;
+    ticketHeight = 65;
+    marginX = 8;
   } else {
     // large
     cols = 1;
@@ -309,101 +316,167 @@ export async function generateSorteoTicketsPdf({
 
     // Renderizado según formato y altura
     if (density === 'standard' || density === 'large') {
-      // Formato grande con talón perforado de control
-      const stubWidth = 36;
+      // Formato oficial horizontal ancho (194mm × 65mm: 4 boletos por hoja A4)
+      const stubWidth = 62;
 
-      // Línea de perforación entre talón y boleto
+      // Fondo del talón de control (Lado Izquierdo)
+      doc.setFillColor(248, 250, 252);
+      doc.rect(x, y, stubWidth, ticketHeight, 'F');
+
+      // Línea de perforación vertical entre talón y boleto del comprador
       doc.setDrawColor(148, 163, 184);
-      doc.setLineDashPattern([1, 1], 0);
+      doc.setLineDashPattern([1.2, 1.2], 0);
       doc.line(x + stubWidth, y, x + stubWidth, y + ticketHeight);
       doc.setLineDashPattern([], 0);
 
       // TALÓN DE CONTROL (Lado Izquierdo)
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7);
+      doc.setFontSize(7.5);
       doc.setTextColor(15, 23, 42);
-      doc.text('TALÓN DE CONTROL', x + 2, y + 6);
+      doc.text('TALÓN DE CONTROL', x + 3, y + 6);
       doc.setFontSize(5.5);
       doc.setTextColor(2, 132, 199);
-      doc.text('Ánfora Oficial', x + 2, y + 10);
+      doc.text('Ánfora Institucional', x + 3, y + 9.5);
 
+      // Recuadro del número de boleto en el talón
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(203, 213, 225);
+      doc.roundedRect(x + 3, y + 11.5, 56, 6.5, 1, 1, 'FD');
       doc.setFont('courier', 'bold');
       doc.setFontSize(7.5);
       doc.setTextColor(15, 23, 42);
-      doc.text(`N° ${formattedCode}`, x + 2, y + 16);
+      doc.text(`N° ${formattedCode}`, x + 5, y + 16);
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(5.5);
-      doc.setTextColor(71, 85, 105);
-      doc.text('Nombre:', x + 2, y + 24);
-      doc.text(tkt.participantName || '_______________________', x + 2, y + 29);
-      doc.text('Cédula:', x + 2, y + 36);
-      doc.text('_______________________', x + 2, y + 41);
-      doc.text('Teléfono:', x + 2, y + 48);
-      doc.text(tkt.participantPhone || '_______________________', x + 2, y + 53);
-      doc.text('Firma:', x + 2, y + 63);
-      doc.text('_______________________', x + 2, y + 73);
-
-      // CUERPO PRINCIPAL DEL BOLETO (Lado Derecho)
-      const bodyX = x + stubWidth + 4;
-      const bodyW = ticketWidth - stubWidth - 6;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(15, 23, 42);
-      doc.text(schoolName, bodyX, y + 7);
-
-      doc.setFontSize(6.5);
-      doc.setTextColor(2, 132, 199);
-      doc.text('BOLETO OFICIAL DE SORTEO INSTITUCIONAL', bodyX, y + 12);
-
-      doc.setFontSize(10);
-      doc.setTextColor(15, 23, 42);
-      const titleSplits = doc.splitTextToSize(raffle?.title || 'Sorteo Institucional', bodyW - 32);
-      doc.text(titleSplits, bodyX, y + 19);
-
-      if (raffle?.drawDate) {
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7);
-        doc.setTextColor(71, 85, 105);
-        doc.text(`Fecha del sorteo: ${raffle.drawDate}`, bodyX, y + 28);
-      }
-
-      if (raffle?.prizes && raffle.prizes.length > 0) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7.5);
-        doc.setTextColor(180, 83, 9);
-        doc.text(`Premios: ${raffle.prizes.slice(0, 3).join(' • ')}`, bodyX, y + 34);
-      }
-
-      // Código de 9 dígitos
-      doc.setFillColor(241, 245, 249);
-      doc.setDrawColor(203, 213, 225);
-      doc.roundedRect(bodyX, y + 42, 42, 12, 1.5, 1.5, 'FD');
+      // Campos de datos del comprador en el talón
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(5);
       doc.setTextColor(100, 116, 139);
-      doc.text('CÓDIGO DE SEGURIDAD', bodyX + 3, y + 46);
-      doc.setFont('courier', 'bold');
-      doc.setFontSize(10);
+      doc.text('NOMBRE COMPRADOR:', x + 3, y + 22);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.5);
       doc.setTextColor(15, 23, 42);
-      doc.text(formattedCode, bodyX + 3, y + 51);
+      doc.text(tkt.participantName?.substring(0, 24) || '_________________________', x + 3, y + 26.5);
 
-      // QR Grande
-      const bigQrSize = 28;
-      const bigQrX = x + ticketWidth - bigQrSize - 4;
-      const bigQrY = y + 16;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('TELÉFONO / CELULAR:', x + 3, y + 31.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(tkt.participantPhone?.substring(0, 24) || '_________________________', x + 3, y + 36);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('CÉDULA / DNI:', x + 3, y + 41);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      doc.setTextColor(100, 116, 139);
+      doc.text('_________________________', x + 3, y + 45.5);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(tkt.sellerName ? 'VENDEDOR:' : 'FIRMA COMPRADOR:', x + 3, y + 50.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6);
+      doc.setTextColor(15, 23, 42);
+      doc.text(tkt.sellerName?.substring(0, 24) || '_________________________', x + 3, y + 55);
+
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(4.5);
+      doc.setTextColor(148, 163, 184);
+      doc.text('Depositar en ánfora antes del sorteo', x + 3, y + 61);
+
+      // MARCA DE CORTE Y TIJERAS (Centro)
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('✂', x + stubWidth - 1.2, y + 25);
+      doc.setFontSize(4.5);
+      doc.text('C', x + stubWidth - 0.7, y + 31);
+      doc.text('O', x + stubWidth - 0.7, y + 34);
+      doc.text('R', x + stubWidth - 0.7, y + 37);
+      doc.text('T', x + stubWidth - 0.7, y + 40);
+      doc.text('E', x + stubWidth - 0.7, y + 43);
+      doc.setFontSize(7.5);
+      doc.text('✂', x + stubWidth - 1.2, y + 50);
+
+      // CUERPO PRINCIPAL DEL BOLETO (Lado Derecho - Para el Comprador)
+      const bodyX = x + stubWidth + 5;
+      const bodyW = ticketWidth - stubWidth - 7;
+
+      // Cabecera institucional
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(schoolName.substring(0, 38), bodyX, y + 6.5);
+
+      doc.setFontSize(5.5);
+      doc.setTextColor(2, 132, 199);
+      doc.text('BOLETO OFICIAL DE SORTEO INSTITUCIONAL', bodyX, y + 10.5);
+
+      // Título del Sorteo
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+      const titleSplits = doc.splitTextToSize(raffle?.title || 'Sorteo Institucional', bodyW - 35);
+      doc.text(titleSplits[0] || 'Sorteo Institucional', bodyX, y + 16.5);
+
+      // Premios y Fecha
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      doc.setTextColor(71, 85, 105);
+      if (raffle?.drawDate) {
+        doc.text(`Fecha del sorteo: ${raffle.drawDate}`, bodyX, y + 22);
+      }
+      if (raffle?.prizes && raffle.prizes.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(180, 83, 9);
+        doc.text(`Premios: ${raffle.prizes.slice(0, 3).join(' • ').substring(0, 50)}`, bodyX, y + 27);
+      }
+
+      // Código Oficial de 9 Dígitos (Caja azul destacada)
+      doc.setFillColor(239, 246, 255);
+      doc.setDrawColor(191, 219, 254);
+      doc.roundedRect(bodyX, y + 33, 56, 13, 1.5, 1.5, 'FD');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5);
+      doc.setTextColor(30, 64, 175);
+      doc.text('CÓDIGO OFICIAL 9 DÍGITOS', bodyX + 3, y + 37.5);
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(formattedCode, bodyX + 3, y + 43.5);
+
+      // Mensaje de garantía para el comprador
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(5);
+      doc.setTextColor(5, 150, 105);
+      doc.text('✓ Boleto Oficial del Comprador', bodyX, y + 51);
+      doc.setFontSize(4.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Conserve este boleto para reclamar el premio en secretaría.', bodyX, y + 55);
+
+      // Código QR oficial para verificación con celular
+      const bigQrSize = 25;
+      const bigQrX = x + ticketWidth - bigQrSize - 5;
+      const bigQrY = y + 14;
       doc.setFillColor(255, 255, 255);
       doc.setDrawColor(226, 232, 240);
       doc.roundedRect(bigQrX, bigQrY, bigQrSize, bigQrSize, 1.5, 1.5, 'FD');
       if (qrPng) {
         doc.addImage(qrPng, 'PNG', bigQrX + 1, bigQrY + 1, bigQrSize - 2, bigQrSize - 2);
       }
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(4.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text('QR OFICIAL', bigQrX + (bigQrSize / 2), bigQrY + bigQrSize + 3.5, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(4);
       doc.setTextColor(100, 116, 139);
-      doc.text('Escanea para verificar', bigQrX + (bigQrSize / 2), bigQrY + bigQrSize + 4, { align: 'center' });
-      doc.text('en la web oficial', bigQrX + (bigQrSize / 2), bigQrY + bigQrSize + 7, { align: 'center' });
+      doc.text('Escanea con celular', bigQrX + (bigQrSize / 2), bigQrY + bigQrSize + 6.5, { align: 'center' });
 
     } else if (density === 'compact') {
       // Formato compacto (66mm de alto × 96mm de ancho: 8 boletos por hoja en 2 columnas)

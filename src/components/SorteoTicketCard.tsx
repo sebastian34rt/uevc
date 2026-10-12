@@ -6,6 +6,7 @@ import { useSiteContent } from '../context/SiteContentContext';
 import { Trophy, Printer, CheckCircle2, Award, Sparkles, Copy, Check, ShieldCheck, Calendar, Scissors } from 'lucide-react';
 import { formatTicketCodeDisplay, normalizeTicketCode, is9DigitCode } from '../utils/sorteoSecurity';
 import { getSorteoQrUrl } from '../utils/domainConfig';
+import { INSTITUTIONAL_LOGO } from '../utils/institutionalLogo';
 
 export type TicketDensity = 'ultra' | 'micro' | 'compact' | 'standard' | 'large';
 
@@ -108,7 +109,7 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
           <div>
             <div className="flex items-center gap-1 mb-0.5">
               <img 
-                src="/logo.png" 
+                src={INSTITUTIONAL_LOGO} 
                 alt="Logo" 
                 className="w-3.5 h-3.5 object-contain rounded p-0.5 bg-white border border-slate-200 shrink-0"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -235,7 +236,7 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
             {/* Cabecera institucional */}
             <div className="flex items-center gap-1.5 mb-1">
               <img 
-                src="/logo.png" 
+                src={INSTITUTIONAL_LOGO} 
                 alt="Logo" 
                 className="w-5 h-5 object-contain rounded p-0.5 bg-white border border-slate-200 shrink-0"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -380,7 +381,7 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <img 
-                src="/logo.png" 
+                src={INSTITUTIONAL_LOGO} 
                 alt="Logo" 
                 className="w-7 h-7 object-contain rounded-md p-0.5 bg-white border border-slate-200 shrink-0"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -551,7 +552,7 @@ export const SorteoTicketCard: React.FC<SorteoTicketCardProps> = ({
           <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2.5 mb-2.5">
             <div className="flex items-center gap-2.5 min-w-0">
               <img 
-                src="/logo.png" 
+                src={INSTITUTIONAL_LOGO} 
                 alt="Logo Institucional" 
                 className="w-10 h-10 object-contain rounded-lg p-1 bg-white border border-slate-100 shadow-2xs shrink-0"
                 onError={(e) => { 
