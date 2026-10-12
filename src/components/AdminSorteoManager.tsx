@@ -444,10 +444,15 @@ export const AdminSorteoManager: React.FC = () => {
 
   const handleSaveTicket = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanCode = normalizeTicketCode(tktCode);
+    let cleanCode = normalizeTicketCode(tktCode);
     if (!cleanCode) {
       showNotification('El código de boleto es obligatorio', true);
       return;
+    }
+
+    // Si el código es numérico con menos de 9 dígitos, rellenar automáticamente con ceros a la izquierda
+    if (/^\d{1,8}$/.test(cleanCode)) {
+      cleanCode = cleanCode.padStart(9, '0');
     }
 
     if (!targetTicketSorteoId) {
@@ -455,19 +460,9 @@ export const AdminSorteoManager: React.FC = () => {
       return;
     }
 
-    if (!tktParticipantName.trim()) {
-      showNotification('Ingresa el nombre del participante / usuario (esencial para anunciar a los ganadores)', true);
-      return;
-    }
-
-    if (!tktPhone.trim()) {
-      showNotification('Ingresa el número de contacto (teléfono o celular) del participante para contactarlo si gana', true);
-      return;
-    }
-
-    // Advertencia amigable si no tiene 9 dígitos para cumplir la seguridad
+    // Advertencia amigable si no tiene 9 dígitos
     if (cleanCode.length !== 9 || !/^\d{9}$/.test(cleanCode)) {
-      showNotification(`Por estándar de seguridad institucional, el código debe tener exactamente 9 dígitos numéricos (tiene ${cleanCode.length}).`, true);
+      showNotification(`Por estándar de seguridad institucional, el código debe tener 9 dígitos numéricos (tiene ${cleanCode.length}).`, true);
       return;
     }
 
@@ -483,29 +478,33 @@ export const AdminSorteoManager: React.FC = () => {
     }
 
     try {
+      const participant = tktParticipantName.trim() || 'Al Portador';
+      const phone = tktPhone.trim();
+      const email = tktEmail.trim();
+
       if (editingTicket) {
         await updateTicket(editingTicket.id, {
           sorteoId: targetTicketSorteoId,
           ticketCode: cleanCode,
-          participantName: tktParticipantName.trim(),
-          participantPhone: tktPhone.trim(),
-          participantEmail: tktEmail.trim()
+          participantName: participant,
+          participantPhone: phone,
+          participantEmail: email
         });
-        showNotification('Datos del participante actualizados exitosamente');
+        showNotification('Datos del boleto actualizados y sincronizados con éxito');
       } else {
         await createTicket({
           sorteoId: targetTicketSorteoId,
           ticketCode: cleanCode,
-          participantName: tktParticipantName.trim(),
-          participantPhone: tktPhone.trim(),
-          participantEmail: tktEmail.trim(),
+          participantName: participant,
+          participantPhone: phone,
+          participantEmail: email,
           status: 'active'
         });
-        showNotification('Boleto registrado exitosamente con datos del usuario para el sorteo');
+        showNotification('Boleto registrado y guardado exitosamente en la base de datos');
       }
       setIsSingleTicketModalOpen(false);
     } catch (err: any) {
-      showNotification('Error al guardar el boleto: ' + err.message, true);
+      showNotification('Error al guardar el boleto: ' + (err.message || 'Error de sincronización'), true);
     }
   };
 

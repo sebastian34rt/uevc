@@ -368,7 +368,7 @@ export const AdminSorteoCsvManager: React.FC<AdminSorteoCsvManagerProps> = ({
           row.sellerName ? `Vendedor: ${row.sellerName}` : '',
           row.notes ? row.notes : ''
         ].filter(Boolean).join(' • '),
-        sellerName: row.sellerName || undefined,
+        ...(row.sellerName ? { sellerName: row.sellerName } : {}),
         batchId: `csv_${Date.now()}`
       }));
 

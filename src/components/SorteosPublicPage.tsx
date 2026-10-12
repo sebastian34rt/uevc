@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSorteos } from '../context/SorteoContext';
 import { useSiteContent } from '../context/SiteContentContext';
 import { SorteoTicketCard } from './SorteoTicketCard';
+import { SorteoTicketVerificationCard } from './SorteoTicketVerificationCard';
 import { SorteoPrintModal } from './SorteoPrintModal';
 import { 
   Trophy, 
@@ -70,9 +71,22 @@ export const SorteosPublicPage: React.FC = () => {
     if (!clean) return;
 
     setSearchPerformed(true);
-    const found = tickets.find(
-      t => normalizeTicketCode(t.ticketCode) === clean || t.ticketCode.toUpperCase() === raw.trim().toUpperCase()
-    );
+    const cleanNumeric = /^\d+$/.test(clean) ? clean.replace(/^0+/, '') : null;
+    const padded9 = /^\d+$/.test(clean) ? clean.padStart(9, '0') : null;
+
+    const found = tickets.find(t => {
+      const tClean = normalizeTicketCode(t.ticketCode);
+      if (tClean === clean || t.ticketCode.toUpperCase() === raw.trim().toUpperCase()) {
+        return true;
+      }
+      if (padded9 && /^\d+$/.test(tClean) && tClean.padStart(9, '0') === padded9) {
+        return true;
+      }
+      if (cleanNumeric && /^\d+$/.test(tClean) && tClean.replace(/^0+/, '') === cleanNumeric) {
+        return true;
+      }
+      return false;
+    });
     setSearchedTicket(found || null);
   };
 
@@ -204,55 +218,45 @@ export const SorteosPublicPage: React.FC = () => {
             </button>
           </form>
 
-          {/* RESULTADO DE LA BÚSQUEDA */}
+          {/* RESULTADO DE LA VERIFICACIÓN */}
           {searchPerformed && (
             <div className="mt-8 pt-6 border-t border-slate-100 max-w-2xl mx-auto">
               {searchedTicket ? (
-                <div>
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      {t('sorteos.verifiedSuccess')}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handlePrintSingle(searchedTicket)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primario text-white text-xs font-bold rounded-xl shadow-xs hover:bg-primario/90 transition-all cursor-pointer"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                        {t('sorteos.printTickets')}
-                      </button>
-
-                      {isAuthenticated && (
-                        <button
-                          type="button"
-                          onClick={() => setTicketToDelete(searchedTicket)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white text-xs font-bold rounded-xl shadow-xs hover:bg-rose-700 transition-all cursor-pointer"
-                          title="Eliminar este boleto"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Eliminar</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <SorteoTicketCard
-                    ticket={searchedTicket}
-                    sorteo={sorteos.find(s => s.id === searchedTicket.sorteoId)}
-                    onPrint={() => handlePrintSingle(searchedTicket)}
-                  />
-                </div>
+                <SorteoTicketVerificationCard
+                  ticket={searchedTicket}
+                  sorteo={sorteos.find(s => s.id === searchedTicket.sorteoId)}
+                  onResetSearch={() => {
+                    setTicketSearchCode('');
+                    setSearchedTicket(null);
+                    setSearchPerformed(false);
+                  }}
+                  onPrintTicket={() => handlePrintSingle(searchedTicket)}
+                  onDeleteTicket={isAuthenticated ? () => setTicketToDelete(searchedTicket) : undefined}
+                  isAdmin={isAuthenticated}
+                />
               ) : (
-                <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center text-rose-800">
-                  <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-2" />
-                  <h4 className="font-bold text-base mb-1">
-                    {t('sorteos.notFoundTitle')}
-                  </h4>
-                  <p className="text-xs text-rose-600 max-w-sm mx-auto">
-                    {t('sorteos.notFoundDesc')}
-                  </p>
+                <div className="bg-rose-50 border border-rose-200 rounded-3xl p-8 text-center text-rose-800 space-y-3">
+                  <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600 mx-auto">
+                    <AlertCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-black text-lg text-rose-950 mb-1">
+                      {t('sorteos.notFoundTitle')}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-rose-700 max-w-md mx-auto leading-relaxed">
+                      El código ingresado no coincide con ningún boleto emitido en el sistema oficial de la institución. Revisa que los dígitos estén bien escritos o escanea nuevamente el código QR del boleto físico.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTicketSearchCode('');
+                      setSearchPerformed(false);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-colors cursor-pointer"
+                  >
+                    Intentar con otro código
+                  </button>
                 </div>
               )}
             </div>
