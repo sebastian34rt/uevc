@@ -39,7 +39,8 @@ import {
   Phone,
   Mail,
   FileSpreadsheet,
-  Upload
+  Upload,
+  Lock
 } from 'lucide-react';
 import { AdminSorteoCsvManager } from './AdminSorteoCsvManager';
 import { useSiteContent } from '../context/SiteContentContext';
@@ -68,7 +69,23 @@ export const AdminSorteoManager: React.FC = () => {
     setSorteoWinner
   } = useSorteos();
 
-  const { content } = useSiteContent();
+  const { content, updateContent } = useSiteContent();
+
+  const isLockedOnlySorteos = content.lockPageForSorteosOnly === 'true';
+
+  const handleToggleLockOnlySorteos = async () => {
+    try {
+      const newVal = isLockedOnlySorteos ? 'false' : 'true';
+      await updateContent({ lockPageForSorteosOnly: newVal });
+      setSuccessMsg(
+        newVal === 'true' 
+          ? '🔒 Modo exclusivo de sorteos activado. El resto de la página web está bloqueada y los visitantes son dirigidos al portal de sorteos.' 
+          : '🔓 Modo exclusivo desactivado. Sitio web abierto con normalidad para todas las secciones.'
+      );
+    } catch (err: any) {
+      setErrorMsg('Error al actualizar el modo exclusivo: ' + (err.message || 'Error desconocido'));
+    }
+  };
 
   // Pestaña principal: 'codigos' | 'sorteos' | 'carga-csv' (Carga masiva CSV y organizador de talonarios)
   const [activeTab, setActiveTab] = useState<'codigos' | 'sorteos' | 'carga-csv'>('codigos');
@@ -482,13 +499,17 @@ export const AdminSorteoManager: React.FC = () => {
       const phone = tktPhone.trim();
       const email = tktEmail.trim();
 
+      const hasUserData = participant !== 'Al Portador' || phone || email;
+
       if (editingTicket) {
         await updateTicket(editingTicket.id, {
           sorteoId: targetTicketSorteoId,
           ticketCode: cleanCode,
           participantName: participant,
           participantPhone: phone,
-          participantEmail: email
+          participantEmail: email,
+          isRegistered: hasUserData ? true : editingTicket.isRegistered,
+          registeredAt: hasUserData ? (editingTicket.registeredAt || new Date().toISOString()) : editingTicket.registeredAt
         });
         showNotification('Datos del boleto actualizados y sincronizados con éxito');
       } else {
@@ -498,7 +519,9 @@ export const AdminSorteoManager: React.FC = () => {
           participantName: participant,
           participantPhone: phone,
           participantEmail: email,
-          status: 'active'
+          status: 'active',
+          isRegistered: hasUserData,
+          registeredAt: hasUserData ? new Date().toISOString() : undefined
         });
         showNotification('Boleto registrado y guardado exitosamente en la base de datos');
       }
@@ -662,6 +685,48 @@ export const AdminSorteoManager: React.FC = () => {
             Nuevo Sorteo
           </button>
         </div>
+      </div>
+
+      {/* TARJETA DE CONTROL: MODO EXCLUSIVO DE SORTEOS (BLOQUEAR WEB Y PERMITIR SOLO SORTEOS) */}
+      <div className={`p-6 rounded-3xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+        isLockedOnlySorteos 
+          ? 'bg-amber-500/10 border-amber-400 text-amber-950 shadow-sm' 
+          : 'bg-white border-slate-200/80 text-slate-800 shadow-xs'
+      }`}>
+        <div className="flex items-center gap-3.5">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+            isLockedOnlySorteos ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            <Lock className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-serif font-black text-base sm:text-lg">
+                Modo Exclusivo de Sorteos
+              </h3>
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                isLockedOnlySorteos ? 'bg-amber-500 text-white animate-pulse' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {isLockedOnlySorteos ? 'Activo (Web bloqueada)' : 'Inactivo (Web normal)'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 mt-0.5 max-w-xl leading-relaxed">
+              Al activar esta opción, cualquier visitante que ingrese al sitio web institucional será redirigido automáticamente al portal de sorteos y verificación de boletos, ocultando el resto de secciones.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleToggleLockOnlySorteos}
+          className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider shadow-md transition-all active:scale-95 cursor-pointer shrink-0 ${
+            isLockedOnlySorteos
+              ? 'bg-slate-900 hover:bg-slate-800 text-white'
+              : 'bg-amber-600 hover:bg-amber-500 text-white'
+          }`}
+        >
+          {isLockedOnlySorteos ? 'Desbloquear Web Normal' : 'Bloquear Web y Permitir Solo Sorteos'}
+        </button>
       </div>
 
       {/* NAVEGACIÓN POR PESTAÑAS */}

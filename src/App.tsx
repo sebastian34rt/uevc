@@ -11,9 +11,10 @@ import { SorteoProvider } from './context/SorteoContext';
 import EmergencyBlackoutScreen from './components/EmergencyBlackoutScreen';
 import BlockedIpScreen from './components/BlockedIpScreen';
 import { HelmetProvider } from 'react-helmet-async';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import SEO from './components/SEO';
 import SorteoHomeBanner from './components/SorteoHomeBanner';
+import { useSiteContent } from './context/SiteContentContext';
 
 import Breadcrumbs from './components/Breadcrumbs';
 
@@ -59,7 +60,9 @@ function Home() {
 
 function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { content } = useSiteContent();
   const isAdminPath = location.pathname === '/admin' || location.pathname === '/login';
+  const isSorteoPath = ['/sorteos', '/sorteo', '/rifas', '/rifa'].includes(location.pathname);
   const { lockdownState, isCurrentClientBanned } = useCybersecurity();
   
   if (isCurrentClientBanned && !isAdminPath) {
@@ -68,6 +71,10 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   if (lockdownState.isActive && !isAdminPath) {
     return <EmergencyBlackoutScreen />;
+  }
+
+  if (content.lockPageForSorteosOnly === 'true' && !isAdminPath && !isSorteoPath) {
+    return <Navigate to="/sorteos" replace />;
   }
 
   return (

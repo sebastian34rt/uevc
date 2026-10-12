@@ -22,6 +22,8 @@ export interface SorteoTicket {
   participantEmail?: string;
   status: 'active' | 'winner' | 'cancelled';
   createdAt: string;
+  registeredAt?: string;
+  isRegistered?: boolean;
   notes?: string;
   sellerName?: string;
   bookNumber?: number;

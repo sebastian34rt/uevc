@@ -64,7 +64,7 @@ export const SorteoHomeBanner: React.FC = () => {
               className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-alerta hover:bg-alerta/90 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-alerta/30 hover:scale-[1.02] active:scale-95 transition-all text-center cursor-pointer"
             >
               <Ticket className="w-4 h-4" />
-              <span>Verificar Mi Boleto</span>
+              <span>Verificar o Registrar Boleto</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 

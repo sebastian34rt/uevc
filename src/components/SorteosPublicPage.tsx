@@ -116,11 +116,13 @@ export const SorteosPublicPage: React.FC = () => {
   const activeSorteos = sorteos.filter(s => s.status === 'active');
   const completedSorteos = sorteos.filter(s => s.status === 'completed');
 
+  const liveSearchedTicket = searchedTicket ? (tickets.find(t => t.id === searchedTicket.id) || searchedTicket) : null;
+
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20 pt-8 sm:pt-12">
       <SEO 
         title="Sorteos & Rifas Institucionales - U.E. Virgen del Cisne"
-        description="Portal oficial de verificación de boletos y sorteos institucionales de la Unidad Educativa Virgen del Cisne."
+        description="Portal oficial de verificación y registro de boletos únicos de la Unidad Educativa Virgen del Cisne."
         path="/sorteos"
       />
 
@@ -168,7 +170,7 @@ export const SorteosPublicPage: React.FC = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* BUSCADOR / VERIFICADOR DE BOLETOS */}
+        {/* BUSCADOR / VERIFICADOR Y REGISTRO DE BOLETOS */}
         <div ref={searchSectionRef} className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md">
           {searchParams.get('ticket') && (
             <div className="mb-6 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-900 text-xs font-bold shadow-xs max-w-lg mx-auto">
@@ -178,7 +180,7 @@ export const SorteosPublicPage: React.FC = () => {
               <div className="flex-1">
                 <span className="block font-black text-sm text-emerald-950">¡Boleto Detectado por Código QR!</span>
                 <span className="font-mono text-emerald-800 text-xs">
-                  Verificando autenticidad en tiempo real: #{searchParams.get('ticket')}
+                  Verificando y asegurando registro: #{searchParams.get('ticket')}
                 </span>
               </div>
             </div>
@@ -186,13 +188,13 @@ export const SorteosPublicPage: React.FC = () => {
 
           <div className="text-center max-w-xl mx-auto mb-6">
             <span className="text-xs font-bold text-primario tracking-widest uppercase block mb-1">
-              {t('sorteos.searchLabel')}
+              Verificación y Registro Oficial de Boletos
             </span>
             <h2 className="text-2xl font-serif font-black text-slate-900">
-              {content.sorteosHeroTitle || t('sorteos.title')}
+              Verificar o Registrar mi Boleto
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              {content.sorteosSecurityGuarantee || t('sorteos.securityGuarantee')}
+              Ingresa el código único de 9 dígitos de tu boleto para consultar su autenticidad o para registrar tu nombre, teléfono y correo asegurándolo como único.
             </p>
           </div>
 
@@ -206,7 +208,7 @@ export const SorteosPublicPage: React.FC = () => {
                 type="text"
                 value={ticketSearchCode}
                 onChange={(e) => setTicketSearchCode(e.target.value.toUpperCase())}
-                placeholder={t('sorteos.searchPlaceholder')}
+                placeholder="Código de 9 dígitos (ej. 849201934)..."
                 className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-mono font-bold text-base uppercase focus:outline-none focus:ring-2 focus:ring-primario/20 focus:bg-white transition-all"
               />
             </div>
@@ -214,24 +216,24 @@ export const SorteosPublicPage: React.FC = () => {
               type="submit"
               className="px-6 py-3 bg-primario hover:bg-primario/90 text-white rounded-2xl font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
             >
-              {t('sorteos.searchButton')}
+              Verificar / Registrar
             </button>
           </form>
 
-          {/* RESULTADO DE LA VERIFICACIÓN */}
+          {/* RESULTADO DE LA VERIFICACIÓN / REGISTRO */}
           {searchPerformed && (
             <div className="mt-8 pt-6 border-t border-slate-100 max-w-2xl mx-auto">
-              {searchedTicket ? (
+              {liveSearchedTicket ? (
                 <SorteoTicketVerificationCard
-                  ticket={searchedTicket}
-                  sorteo={sorteos.find(s => s.id === searchedTicket.sorteoId)}
+                  ticket={liveSearchedTicket}
+                  sorteo={sorteos.find(s => s.id === liveSearchedTicket.sorteoId)}
                   onResetSearch={() => {
                     setTicketSearchCode('');
                     setSearchedTicket(null);
                     setSearchPerformed(false);
                   }}
-                  onPrintTicket={() => handlePrintSingle(searchedTicket)}
-                  onDeleteTicket={isAuthenticated ? () => setTicketToDelete(searchedTicket) : undefined}
+                  onPrintTicket={() => handlePrintSingle(liveSearchedTicket)}
+                  onDeleteTicket={isAuthenticated ? () => setTicketToDelete(liveSearchedTicket) : undefined}
                   isAdmin={isAuthenticated}
                 />
               ) : (

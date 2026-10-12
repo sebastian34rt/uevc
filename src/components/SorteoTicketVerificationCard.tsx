@@ -9,20 +9,23 @@ import {
   Calendar, 
   User, 
   Phone, 
+  Mail,
   Tag, 
   Printer, 
   RotateCcw, 
   FileText, 
   Lock, 
-  ExternalLink,
-  ChevronDown,
-  ChevronUp,
-  Sparkles,
-  Trash2,
-  Edit3
+  ChevronDown, 
+  ChevronUp, 
+  Sparkles, 
+  Trash2, 
+  Edit3,
+  UserCheck,
+  AlertCircle
 } from 'lucide-react';
 import { Sorteo, SorteoTicket } from '../types/sorteo';
 import { formatTicketCodeDisplay, normalizeTicketCode } from '../utils/sorteoSecurity';
+import { useSorteos } from '../context/SorteoContext';
 import { SorteoTicketCard } from './SorteoTicketCard';
 
 interface SorteoTicketVerificationCardProps {
@@ -44,8 +47,18 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
   onDeleteTicket,
   isAdmin = false
 }) => {
+  const { registerTicket } = useSorteos();
   const [copied, setCopied] = useState(false);
   const [showFullPhysicalTicket, setShowFullPhysicalTicket] = useState(false);
+  const [isEditingRegistration, setIsEditingRegistration] = useState(false);
+
+  // Estados del formulario de registro único
+  const [regName, setRegName] = useState(ticket.participantName === 'Al Portador' ? '' : (ticket.participantName || ''));
+  const [regPhone, setRegPhone] = useState(ticket.participantPhone || '');
+  const [regEmail, setRegEmail] = useState(ticket.participantEmail || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [regError, setRegError] = useState<string | null>(null);
+  const [regSuccess, setRegSuccess] = useState(false);
 
   const cleanCode = normalizeTicketCode(ticket.ticketCode);
   const formattedCode = formatTicketCodeDisplay(ticket.ticketCode);
@@ -53,17 +66,70 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
   const isWinner = ticket.status === 'winner' || 
     (sorteo?.winnerTicketCode && normalizeTicketCode(sorteo.winnerTicketCode) === cleanCode);
 
+  // Un boleto se considera registrado si tiene isRegistered o si tiene un nombre real asignado
+  const isRegistered = Boolean(
+    ticket.isRegistered || 
+    (ticket.participantName && ticket.participantName.trim() !== '' && ticket.participantName.trim() !== 'Al Portador')
+  );
+
   const handleCopyCode = () => {
     navigator.clipboard.writeText(ticket.ticketCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const verificationTime = new Date().toLocaleDateString('es-EC', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  });
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError(null);
+
+    const name = regName.trim();
+    const phone = regPhone.trim();
+    const email = regEmail.trim();
+
+    if (!name || name.length < 3) {
+      setRegError('Por favor ingresa tu nombre y apellido completos.');
+      return;
+    }
+
+    if (!phone || phone.length < 7) {
+      setRegError('Por favor ingresa un número de teléfono o celular válido (mínimo 7 dígitos).');
+      return;
+    }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setRegError('Por favor ingresa una dirección de correo electrónico válida.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await registerTicket(ticket.id, {
+        participantName: name,
+        participantPhone: phone,
+        participantEmail: email
+      });
+      setRegSuccess(true);
+      setIsEditingRegistration(false);
+    } catch (err: any) {
+      setRegError(err.message || 'Error al registrar los datos del boleto');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const registeredDateStr = ticket.registeredAt 
+    ? new Date(ticket.registeredAt).toLocaleDateString('es-EC', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : new Date(ticket.createdAt).toLocaleDateString('es-EC', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
@@ -100,7 +166,7 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
           <div className="text-right">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-white/90 border border-slate-200 shadow-2xs text-slate-700">
               <span className={`w-2 h-2 rounded-full ${isWinner ? 'bg-amber-500 animate-bounce' : 'bg-emerald-500 animate-pulse'}`} />
-              {isWinner ? 'Ganador' : 'Válido'}
+              {isWinner ? 'Ganador' : (isRegistered ? 'Registrado' : 'Válido')}
             </span>
           </div>
         </div>
@@ -177,73 +243,215 @@ export const SorteoTicketVerificationCard: React.FC<SorteoTicketVerificationCard
             </div>
           </div>
 
-          {/* FICHA DE DATOS DEL BOLETO */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Sorteo Asociado */}
-            <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
-              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
-                <Tag className="w-3.5 h-3.5 text-primario" />
-                <span>Sorteo Asociado</span>
+          {/* NOTIFICACIÓN DE ÉXITO DE REGISTRO */}
+          {regSuccess && (
+            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 flex items-center gap-3 shadow-sm animate-fade-in">
+              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <Check className="w-5 h-5" />
               </div>
-              <p className="font-bold text-slate-900 text-sm truncate">
-                {sorteo?.title || 'Sorteo Institucional'}
-              </p>
-              {sorteo?.drawDate && (
-                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-slate-400" />
-                  Fecha: {sorteo.drawDate}
-                </p>
-              )}
-            </div>
-
-            {/* Participante / Comprador */}
-            <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
-              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
-                <User className="w-3.5 h-3.5 text-primario" />
-                <span>Participante Asignado</span>
+              <div className="flex-1 text-xs">
+                <strong className="block font-black text-sm text-emerald-900">¡Boleto Registrado Exitosamente!</strong>
+                <span>Tus datos han quedado vinculados como único titular de este boleto para el sorteo institucional.</span>
               </div>
-              <p className="font-bold text-slate-900 text-sm truncate">
-                {ticket.participantName?.trim() || 'Al Portador (Sin asignar datos)'}
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1 truncate">
-                {ticket.participantPhone ? (
-                  <>
-                    <Phone className="w-3 h-3 text-slate-400" />
-                    Contacto: {ticket.participantPhone}
-                  </>
-                ) : (
-                  <span className="text-slate-400">Sin teléfono registrado</span>
-                )}
-              </p>
             </div>
+          )}
 
-            {/* Emisión y Talonario */}
-            {ticket.sellerName && (
-              <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
-                <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
-                  <FileText className="w-3.5 h-3.5 text-primario" />
-                  <span>Vendedor / Responsable</span>
+          {/* SECCIÓN DE REGISTRO DE DATOS ÚNICOS */}
+          {(!isRegistered || isEditingRegistration) ? (
+            <div className="p-6 rounded-2xl bg-amber-50/70 border-2 border-amber-300 text-slate-800 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <UserCheck className="w-5 h-5" />
                 </div>
-                <p className="font-bold text-slate-900 text-sm truncate">
-                  {ticket.sellerName}
-                </p>
+                <div>
+                  <h4 className="font-serif font-black text-base text-amber-950">
+                    {isEditingRegistration ? 'Actualizar Datos del Boleto Único' : 'Registrar este Boleto a tu Nombre (Único e Intransferible)'}
+                  </h4>
+                  <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                    Ingresa tu <strong>nombre completo</strong>, <strong>número de celular</strong> y <strong>correo electrónico</strong> para asegurar tu participación única en el sorteo.
+                  </p>
+                </div>
               </div>
-            )}
 
-            {/* Sello de Seguridad */}
-            <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70 sm:col-span-2">
-              <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase mb-1">
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  Sello Digital de Seguridad
-                </span>
-                <span className="text-[10px] text-slate-400">SHA-256 Validado</span>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed font-mono">
-                REG-{ticket.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16)} • {verificationTime}
-              </p>
+              <form onSubmit={handleRegisterSubmit} className="space-y-3 pt-1">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                    Nombre Completo del Participante *
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      placeholder="ej. Carlos Mendoza"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                      Número de Celular / WhatsApp *
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="tel"
+                        required
+                        value={regPhone}
+                        onChange={(e) => setRegPhone(e.target.value)}
+                        placeholder="ej. 0991234567"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                      Correo Electrónico *
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="email"
+                        required
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        placeholder="ej. carlos.mendoza@gmail.com"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {regError && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>{regError}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <span>Guardando Registro Único...</span>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>Registrar y Asegurar Boleto Único</span>
+                      </>
+                    )}
+                  </button>
+
+                  {isEditingRegistration && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingRegistration(false)}
+                      className="px-4 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              </form>
             </div>
-          </div>
+          ) : (
+            /* FICHA DE DATOS DEL BOLETO YA REGISTRADO Y ÚNICO */
+            <div className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Sorteo Asociado */}
+                <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
+                  <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
+                    <Tag className="w-3.5 h-3.5 text-primario" />
+                    <span>Sorteo Asociado</span>
+                  </div>
+                  <p className="font-bold text-slate-900 text-sm truncate">
+                    {sorteo?.title || 'Sorteo Institucional'}
+                  </p>
+                  {sorteo?.drawDate && (
+                    <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-slate-400" />
+                      Fecha: {sorteo.drawDate}
+                    </p>
+                  )}
+                </div>
+
+                {/* Participante Registrado */}
+                <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
+                  <div className="flex items-center justify-between gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Titular Registrado</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full">
+                      Único
+                    </span>
+                  </div>
+                  <p className="font-bold text-slate-900 text-sm truncate">
+                    {ticket.participantName}
+                  </p>
+                  <div className="text-xs text-slate-600 mt-1 space-y-0.5">
+                    {ticket.participantPhone && (
+                      <p className="flex items-center gap-1 text-[11px] truncate">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span>Celular: {ticket.participantPhone}</span>
+                      </p>
+                    )}
+                    {ticket.participantEmail && (
+                      <p className="flex items-center gap-1 text-[11px] truncate">
+                        <Mail className="w-3 h-3 text-slate-400" />
+                        <span>Correo: {ticket.participantEmail}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Emisión y Talonario */}
+                {ticket.sellerName && (
+                  <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200/70">
+                    <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase mb-1">
+                      <FileText className="w-3.5 h-3.5 text-primario" />
+                      <span>Vendedor / Responsable</span>
+                    </div>
+                    <p className="font-bold text-slate-900 text-sm truncate">
+                      {ticket.sellerName}
+                    </p>
+                  </div>
+                )}
+
+                {/* Sello de Seguridad y Registro Único */}
+                <div className="bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-200/70 sm:col-span-2">
+                  <div className="flex items-center justify-between text-emerald-800 text-xs font-bold uppercase mb-1">
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      Registro Único Asegurado
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-mono">REG-{ticket.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Registrado de forma única e intransferible el <strong>{registeredDateStr}</strong>. Este boleto está protegido en la base de datos oficial.
+                  </p>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingRegistration(true)}
+                      className="mt-2 text-[11px] font-bold text-primario hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Modificar datos registrados del titular (Admin)</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* BOTONES DE ACCIÓN */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">

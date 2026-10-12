@@ -44,6 +44,7 @@ interface SorteoContextType {
   deleteTicket: (id: string) => Promise<void>;
   clearTicketsForSorteo: (sorteoId: string) => Promise<void>;
   setSorteoWinner: (sorteoId: string, ticketCode: string, participantName: string, prize: string, phone?: string, email?: string) => Promise<void>;
+  registerTicket: (ticketId: string, data: { participantName: string; participantPhone: string; participantEmail: string }) => Promise<void>;
 }
 
 const SorteoContext = createContext<SorteoContextType | undefined>(undefined);
@@ -376,6 +377,48 @@ export const SorteoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const registerTicket = async (
+    ticketId: string, 
+    data: { participantName: string; participantPhone: string; participantEmail: string }
+  ) => {
+    const target = tickets.find(t => t.id === ticketId);
+    if (!target) {
+      throw new Error('Boleto no encontrado en el sistema');
+    }
+
+    const cleanName = (data.participantName || '').trim();
+    const cleanPhone = (data.participantPhone || '').trim();
+    const cleanEmail = (data.participantEmail || '').trim().toLowerCase();
+
+    if (!cleanName) {
+      throw new Error('El nombre completo es obligatorio para registrar el boleto');
+    }
+    if (!cleanPhone) {
+      throw new Error('El número de contacto (celular/teléfono) es obligatorio');
+    }
+    if (!cleanEmail) {
+      throw new Error('El correo electrónico es obligatorio');
+    }
+
+    const updates: Partial<SorteoTicket> = {
+      participantName: cleanName,
+      participantPhone: cleanPhone,
+      participantEmail: cleanEmail,
+      isRegistered: true,
+      registeredAt: new Date().toISOString()
+    };
+
+    // Actualización optimista inmediata en estado y caché
+    setTickets(prev => {
+      const updated = prev.map(t => t.id === ticketId ? { ...t, ...updates } : t);
+      saveTicketsCache(updated);
+      return updated;
+    });
+
+    const sanitized = sanitizeForFirestore(updates);
+    await updateDoc(doc(db, 'sorteo_tickets', ticketId), sanitized);
+  };
+
   return (
     <SorteoContext.Provider
       value={{
@@ -391,7 +434,8 @@ export const SorteoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         updateTicket,
         deleteTicket,
         clearTicketsForSorteo,
-        setSorteoWinner
+        setSorteoWinner,
+        registerTicket
       }}
     >
       {children}

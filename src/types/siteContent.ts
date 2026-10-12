@@ -45,6 +45,7 @@ export interface SiteContent {
   sorteosClaimContact?: string;
   sorteosShowHomeBanner?: string;
   sorteosHomeBannerText?: string;
+  lockPageForSorteosOnly?: string;
 
   // Dominio Oficial para Códigos QR y Enlaces Públicos
   publicDomain?: string;
@@ -97,6 +98,7 @@ export const defaultSiteContent: SiteContent = {
   sorteosClaimContact: "0981179375",
   sorteosShowHomeBanner: "true",
   sorteosHomeBannerText: "¡Participa en nuestros sorteos benéficos o verifica la autenticidad de tu boleto con su código de 9 dígitos!",
+  lockPageForSorteosOnly: "false",
 
   // Dominio público por defecto para escaneo QR
   publicDomain: "https://uevc.vercel.app",
