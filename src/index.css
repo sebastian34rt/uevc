@@ -346,12 +346,12 @@ html {
     overflow: hidden !important;
   }
 
-  /* DISTRIBUCIÓN DE 4 BOLETOS POR HOJA: 2 COLUMNAS × 2 FILAS */
+  /* DISTRIBUCIÓN ESTÁNDAR DE 4 BOLETOS POR HOJA: 1 COLUMNA COMPLETA × 4 FILAS (65mm) */
   .printable-tickets-wrapper.print-grid-4,
   .print-grid-4 {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    grid-auto-rows: 134mm !important;
+    grid-template-columns: 1fr !important;
+    grid-auto-rows: 65mm !important;
     gap: 3mm !important;
     width: 100% !important;
     margin: 0 !important;
@@ -363,8 +363,8 @@ html {
   .printable-tickets-wrapper.print-grid-4 > .ticket-wrapper-item {
     display: block !important;
     width: 100% !important;
-    height: 134mm !important;
-    max-height: 134mm !important;
+    height: 65mm !important;
+    max-height: 65mm !important;
     margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
@@ -373,14 +373,11 @@ html {
     overflow: hidden !important;
   }
 
-  /* =========================================================================
-     GUÍAS DE CORTE EN ESQUINAS PARA TIJERA O GUILLOTINA
-     ========================================================================= */
+  /* Mantener el diseño 100% fiel e idéntico a la pantalla sin alteraciones */
   .ticket-wrapper-item {
     position: relative !important;
   }
 
-  /* Mantener el diseño 100% fiel e idéntico a la pantalla */
   .ticket-wrapper-item > div {
     height: 100% !important;
     width: 100% !important;
@@ -388,30 +385,6 @@ html {
     position: relative !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-
-  /* Pequeñas líneas guía en las 4 esquinas de cada boleto para corte preciso */
-  .ticket-wrapper-item::before {
-    content: "" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    pointer-events: none !important;
-    z-index: 50 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    background:
-      /* Esquina superior izquierda (horizontal y vertical de 3.5mm) */
-      linear-gradient(to right, #000000 3.5mm, transparent 3.5mm) top left / 100% 1.5px no-repeat,
-      linear-gradient(to bottom, #000000 3.5mm, transparent 3.5mm) top left / 1.5px 100% no-repeat,
-      /* Esquina superior derecha */
-      linear-gradient(to left, #000000 3.5mm, transparent 3.5mm) top right / 100% 1.5px no-repeat,
-      linear-gradient(to bottom, #000000 3.5mm, transparent 3.5mm) top right / 1.5px 100% no-repeat,
-      /* Esquina inferior izquierda */
-      linear-gradient(to right, #000000 3.5mm, transparent 3.5mm) bottom left / 100% 1.5px no-repeat,
-      linear-gradient(to top, #000000 3.5mm, transparent 3.5mm) bottom left / 1.5px 100% no-repeat,
-      /* Esquina inferior derecha */
-      linear-gradient(to left, #000000 3.5mm, transparent 3.5mm) bottom right / 100% 1.5px no-repeat,
-      linear-gradient(to top, #000000 3.5mm, transparent 3.5mm) bottom right / 1.5px 100% no-repeat !important;
   }
 
   /* Modo de ahorro de tinta y alto contraste */

@@ -1,10 +1,13 @@
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
 import { Sorteo, SorteoTicket } from '../types/sorteo';
-import { formatTicketCodeDisplay } from './sorteoSecurity';
+import { formatTicketCodeDisplay, normalizeTicketCode } from './sorteoSecurity';
+import { getSorteoQrUrl } from './domainConfig';
 
 /**
  * Convierte un elemento SVG en una imagen PNG DataURL nítida mediante canvas offscreen.
- * No analiza hojas de estilo ni propiedades CSS modernas (oklch), evitando cualquier error.
+ * Mantenido para retrocompatibilidad con inventoryPdfGenerator.
  */
 export async function svgToPngDataUrl(svgElement: SVGElement, size = 180): Promise<string> {
   return new Promise((resolve) => {
@@ -40,21 +43,128 @@ export interface GeneratePdfOptions {
   schoolName?: string;
   density?: 'ultra' | 'micro' | 'compact' | 'standard' | 'large';
   columns?: '4' | '3';
+  publicDomain?: string;
+  containerElement?: HTMLElement | null;
 }
 
 /**
- * Generador nativo vectorial de boletos en PDF A4 con soporte para múltiples páginas.
- * Garantiza que la primera página y todas las siguientes mantengan la misma alineación,
- * guías de corte en esquinas para tijeras/guillotina y numeración de hojas.
+ * Generador oficial de boletos en PDF A4 con soporte para múltiples páginas.
+ * Captura directamente los elementos del DOM renderizados mediante html2canvas
+ * para garantizar que el PDF sea 100% IDÉNTICO a lo que se ve en la pantalla.
  */
 export async function generateSorteoTicketsPdf({
   tickets,
   sorteoMap,
   schoolName = 'U.E. Virgen del Cisne',
-  density = 'ultra',
-  columns = '4'
+  density = 'standard',
+  columns = '4',
+  publicDomain,
+  containerElement
 }: GeneratePdfOptions): Promise<void> {
   if (!tickets || tickets.length === 0) return;
+
+  // CAPTURA 100% FIEL DE LA PANTALLA: Si se proporciona el contenedor con los boletos renderizados
+  if (containerElement) {
+    const ticketNodes = Array.from(containerElement.querySelectorAll<HTMLElement>('.print-ticket-item'));
+    if (ticketNodes.length > 0) {
+      try {
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+          compress: true
+        });
+
+        // Configuración de cuadrícula idéntica a la vista en pantalla
+        let cols = 1;
+        let rows = 4;
+        let ticketW = 194;
+        let ticketH = 65;
+        let marginX = 8;
+        let marginY = 8;
+        let gapX = 0;
+        let gapY = 3.5;
+
+        if (density === 'standard') {
+          cols = 1;
+          rows = 4;
+          ticketW = 194;
+          ticketH = 65;
+          marginX = 8;
+          marginY = 8;
+          gapX = 0;
+          gapY = 3.5;
+        } else if (density === 'compact') {
+          cols = 2;
+          rows = 4;
+          ticketW = 96;
+          ticketH = 66;
+          marginX = 7;
+          marginY = 7;
+          gapX = 4;
+          gapY = 3;
+        } else if (density === 'micro') {
+          cols = 2;
+          rows = 6;
+          ticketW = 96;
+          ticketH = 44.5;
+          marginX = 7;
+          marginY = 7;
+          gapX = 4;
+          gapY = 2;
+        } else if (density === 'ultra') {
+          if (columns === '3') {
+            cols = 3;
+            rows = 6;
+            ticketW = 63;
+            ticketH = 44.5;
+            marginX = 7;
+            marginY = 7;
+            gapX = 3;
+            gapY = 2;
+          } else {
+            cols = 4;
+            rows = 6;
+            ticketW = 46.5;
+            ticketH = 44.5;
+            marginX = 7;
+            marginY = 7;
+            gapX = 2.5;
+            gapY = 2;
+          }
+        }
+
+        const itemsPerPage = cols * rows;
+
+        for (let i = 0; i < ticketNodes.length; i++) {
+          const node = ticketNodes[i];
+          const slot = i % itemsPerPage;
+          if (i > 0 && slot === 0) {
+            doc.addPage();
+          }
+
+          const col = slot % cols;
+          const row = Math.floor(slot / cols);
+          const x = marginX + col * (ticketW + gapX);
+          const y = marginY + row * (ticketH + gapY);
+
+          const canvas = await html2canvas(node, {
+            scale: 2.5,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          });
+          const imgData = canvas.toDataURL('image/png');
+          doc.addImage(imgData, 'PNG', x, y, ticketW, ticketH, undefined, 'FAST');
+        }
+
+        doc.save(`boletos_sorteo_${Date.now()}.pdf`);
+        return;
+      } catch (err) {
+        console.warn('Error en captura html2canvas, usando generador vectorial nativo:', err);
+      }
+    }
+  }
 
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -67,11 +177,11 @@ export async function generateSorteoTicketsPdf({
   const is3Col = density === 'ultra' && columns === '3';
 
   // Configuración de cuadrícula según densidad seleccionada
-  let cols = 4;
+  let cols = 2;
   let rows = 6;
-  let ticketWidth = 48;
+  let ticketWidth = 96;
   let ticketHeight = 44.5;
-  let marginX = 6;
+  let marginX = 7.5;
   const marginY = 6;
   const spacingX = 1.5;
   const spacingY = 1.5;
@@ -120,31 +230,28 @@ export async function generateSorteoTicketsPdf({
   const itemsPerPage = cols * rows;
   const totalSheets = Math.ceil(tickets.length / itemsPerPage);
 
-  // Recolectar y cachear códigos QR por ticketCode para optimizar memoria y tiempo
+  // Generar códigos QR directamente de alta resolución sin depender del DOM
   const qrCacheByCode = new Map<string, string>();
-  const allSvgs = Array.from(document.querySelectorAll('.printable-tickets-wrapper svg'));
-
-  // Indexar SVGs del DOM
-  for (let i = 0; i < tickets.length; i++) {
-    const tkt = tickets[i];
-    if (qrCacheByCode.has(tkt.ticketCode)) continue;
-
-    // Buscar por ID específico
-    const ticketEl = document.getElementById(`print-ticket-${tkt.id}`) || document.getElementById(`print-ticket-${i}`);
-    let svgEl = ticketEl?.querySelector('svg');
-
-    // Fallback: buscar por coincidencia en la lista de SVGs
-    if (!svgEl && allSvgs.length > 0) {
-      svgEl = allSvgs[i % allSvgs.length] as SVGSVGElement;
-    }
-
-    if (svgEl) {
-      const pngUrl = await svgToPngDataUrl(svgEl as unknown as SVGElement, 180);
-      if (pngUrl) {
-        qrCacheByCode.set(tkt.ticketCode, pngUrl);
+  await Promise.all(
+    tickets.map(async (tkt) => {
+      const cleanCode = normalizeTicketCode(tkt.ticketCode);
+      if (!qrCacheByCode.has(cleanCode)) {
+        try {
+          const qrUrl = getSorteoQrUrl(cleanCode, publicDomain);
+          const dataUrl = await QRCode.toDataURL(qrUrl, {
+            margin: 1,
+            width: 200,
+            errorCorrectionLevel: 'M',
+            color: { dark: '#0f172a', light: '#ffffff' }
+          });
+          qrCacheByCode.set(cleanCode, dataUrl);
+          qrCacheByCode.set(tkt.ticketCode, dataUrl);
+        } catch {
+          // fallback
+        }
       }
-    }
-  }
+    })
+  );
 
   // Dibujar boletos en cada hoja y páginas subsiguientes
   for (let i = 0; i < tickets.length; i++) {

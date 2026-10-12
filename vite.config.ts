@@ -103,6 +103,20 @@ export default defineConfig(() => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
+      dedupe: ['react', 'react-dom'],
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-i18next',
+        'react-router-dom',
+        'i18next',
+        'lucide-react',
+      ],
     },
     server: {
       port: 3000,

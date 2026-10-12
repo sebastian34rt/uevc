@@ -10,11 +10,13 @@ import {
   FileText,
   Sparkles,
   Layers,
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSiteContent } from '../context/SiteContentContext';
 import { getPublicSiteUrl } from '../utils/domainConfig';
+import { generateSorteoTicketsPdf } from '../utils/sorteoPdfGenerator';
 
 interface SorteoPrintModalProps {
   isOpen: boolean;
@@ -31,19 +33,20 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
   tickets,
   sorteos,
   title = 'Planilla Oficial de Impresión de Boletos',
-  defaultLayout = 'ultra'
+  defaultLayout = 'standard'
 }) => {
   const { t } = useTranslation();
   const { content } = useSiteContent();
 
-  // Densidad predeterminada en 'ultra' (24 por hoja) para máximo ahorro de papel
+  // Densidad predeterminada en 'standard' (4 por hoja: formato oficial completo con talón amplio, línea de corte y QR grande)
   const [density, setDensity] = useState<TicketDensity>(defaultLayout);
   const [columns, setColumns] = useState<'4' | '3'>('4');
   const [inkSaver, setInkSaver] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const printableRef = useRef<HTMLDivElement>(null);
 
-  // Si solo se imprimirá 1 boleto, ofrecer la opción de llenar la hoja completa con 24 copias
-  const [fillSheetMode, setFillSheetMode] = useState<boolean>(tickets.length === 1);
+  // Modo opcional para llenar la hoja si solo se seleccionó 1 boleto
+  const [fillSheetMode, setFillSheetMode] = useState<boolean>(false);
 
   // Efecto para activar clase especial de impresión en el body
   useEffect(() => {
@@ -73,9 +76,26 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
     return tickets;
   }, [tickets, fillSheetMode, density, columns]);
 
-  // Imprimir o Guardar como PDF tal y como sale en la pantalla sin cambiar nada
-  const handleDownloadPdf = () => {
-    window.print();
+  // Descargar PDF capturando exactamente lo que se ve en la pantalla
+  const handleDownloadPdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      await generateSorteoTicketsPdf({
+        tickets: effectiveTickets,
+        sorteoMap,
+        schoolName: content.institutionName || 'U.E. Virgen del Cisne',
+        density,
+        columns,
+        publicDomain: content.publicDomain,
+        containerElement: printableRef.current
+      });
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      // Fallback a ventana de impresión si algo falla
+      window.print();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handlePrint = () => {
@@ -166,21 +186,31 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
             <button
               type="button"
+              disabled={isGeneratingPdf}
               onClick={handleDownloadPdf}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
-              title="Guardar como PDF tal y como sale en la pantalla (selecciona 'Guardar como PDF' en Destino)"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-60"
+              title="Descargar archivo PDF oficial de alta resolución con todos los boletos"
             >
-              <Download className="w-4 h-4 text-emerald-400" />
-              <span>Guardar como PDF</span>
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  <span>Generando PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 text-emerald-400" />
+                  <span>Descargar PDF</span>
+                </>
+              )}
             </button>
             <button
               type="button"
               onClick={handlePrint}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-primario hover:bg-primario/90 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
-              title="Imprimir boletos directamente en papel"
+              title="Imprimir boletos directamente en impresora"
             >
               <Printer className="w-4 h-4" />
-              <span>Imprimir Ahora</span>
+              <span>Imprimir en Papel</span>
             </button>
             <button
               type="button"
@@ -227,29 +257,16 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
             <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 flex-wrap gap-0.5">
               <button
                 type="button"
-                onClick={() => setDensity('ultra')}
+                onClick={() => setDensity('standard')}
                 className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
-                  density === 'ultra'
-                    ? 'bg-emerald-600 text-white shadow-xs'
+                  density === 'standard'
+                    ? 'bg-primario text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="18 a 24 boletos por hoja en 3 o 4 columnas: ultra compacto con talón mini + corte + QR"
+                title="4 boletos grandes oficiales por hoja: formato clásico con talón completo para ánfora + corte con tijera + QR grande"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Ultra Mini (18-24 por hoja)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDensity('micro')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
-                  density === 'micro'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="12 boletos por hoja en 2 columnas: formato talonario con talón cómodo para escribir + corte + QR"
-              >
-                <span>Talonario Micro (12 por hoja)</span>
+                <span>Talonario Estándar (4 por hoja • Oficial)</span>
               </button>
 
               <button
@@ -260,35 +277,35 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="8 boletos por hoja en 2 columnas (66mm de alto) con talón amplio"
+                title="8 boletos por hoja en 2 columnas (66mm de alto) con talón y código QR"
               >
                 <span>Talonario Económico (8)</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setDensity('standard')}
+                onClick={() => setDensity('micro')}
                 className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
-                  density === 'standard'
+                  density === 'micro'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="4 boletos grandes por hoja con talón completo"
+                title="12 boletos por hoja en 2 columnas: formato ahorro de papel"
               >
-                <span>Talonario Estándar (4)</span>
+                <span>Talonario Micro (12)</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setDensity('large')}
+                onClick={() => setDensity('ultra')}
                 className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
-                  density === 'large'
+                  density === 'ultra'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="1 a 2 boletos grandes con talón perforado de ánfora"
+                title="18 a 24 boletos por hoja: ultra compacto para consumo mínimo de hojas"
               >
-                <span>Grande (1-2)</span>
+                <span>Ultra Mini (18-24)</span>
               </button>
             </div>
           </div>
@@ -396,7 +413,7 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
@@ -406,11 +423,29 @@ export const SorteoPrintModal: React.FC<SorteoPrintModalProps> = ({
             </button>
             <button
               type="button"
+              disabled={isGeneratingPdf}
+              onClick={handleDownloadPdf}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-60"
+            >
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  <span>Generando PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 text-emerald-400" />
+                  <span>Descargar Archivo PDF</span>
+                </>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={handlePrint}
               className="inline-flex items-center gap-2 px-5 py-2 bg-primario hover:bg-primario/90 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Imprimir / Guardar PDF ({effectiveTickets.length} Boletos • {estimatedSheets} {estimatedSheets === 1 ? 'Hoja' : 'Hojas'})</span>
+              <span>Imprimir en Papel ({effectiveTickets.length} Boletos)</span>
             </button>
           </div>
         </div>

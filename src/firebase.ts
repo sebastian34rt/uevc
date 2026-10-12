@@ -24,7 +24,7 @@ export const db = initializeFirestore(
   {
     experimentalForceLongPolling: true,
   },
-  firebaseConfigJson.firestoreDatabaseId || "ai-studio-remixinstitutoed-2a5d4863-691c-4183-a59a-6a7abbc7c12e"
+  firebaseConfigJson.firestoreDatabaseId || "ai-studio-remixremixinstit-2c668b7e-597d-4d48-9051-16906f88c83c"
 );
 
 export { collection, addDoc, serverTimestamp };

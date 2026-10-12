@@ -1211,8 +1211,8 @@ export const AdminSorteoManager: React.FC = () => {
                     onPrint={() => handlePrintSingle(ticket)}
                   />
 
-                  {/* Acciones flotantes */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity bg-white/95 backdrop-blur-xs p-1 rounded-xl shadow-xs border border-slate-200 print:hidden z-10">
+                  {/* Acciones flotantes en la parte inferior para no tapar el código del boleto */}
+                  <div className="absolute bottom-2.5 right-2 sm:right-3 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity bg-white/95 backdrop-blur-xs p-1 rounded-xl shadow-xs border border-slate-200 print:hidden z-10">
                     <button
                       type="button"
                       onClick={() => handlePrintSingle(ticket)}
