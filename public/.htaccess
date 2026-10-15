@@ -2,20 +2,60 @@
   RewriteEngine On
   RewriteBase /
   
-  # Redirigir siempre a HTTPS
+  # Forzar redirección siempre a HTTPS en cPanel
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # Permitir acceso directo a archivos y carpetas existentes
+  # Permitir acceso directo a archivos y carpetas que existen físicamente
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Redirigir todas las demás rutas a index.html (React SPA Routing)
+  # Redirigir todas las rutas de React Router (/sorteos, /admin, /login, etc.) a index.html
   RewriteRule ^ index.html [L]
 </IfModule>
 
-# Compresión GZIP para máxima velocidad
-<IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+# Tipos MIME para PWA, fuentes web y módulos modernos
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+  AddType application/json .json
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+  AddType font/woff .woff
+  AddType text/javascript .js .mjs
 </IfModule>
+
+# Control de Caché Inteligente:
+# 1. index.html y sw.js NUNCA se cachean agresivamente para que las actualizaciones se reflejen al instante
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|sw\.js|registerSW\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </FilesMatch>
+
+  # 2. Assets con hash criptográfico de Vite (/assets/*) se cachean por 1 año
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$">
+    Header set Cache-Control "max-age=31536000, public, immutable"
+  </FilesMatch>
+
+  # Encabezados de seguridad web
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Compresión GZIP / DEFLATE para máxima velocidad en servidores cPanel (Apache / LiteSpeed)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml font/woff font/woff2
+</IfModule>
+
+# Prevenir acceso a archivos de configuración ocultos
+<FilesMatch "^\.">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+<Files ".htaccess">
+  Order allow,deny
+  Allow from all
+</Files>

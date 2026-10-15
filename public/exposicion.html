@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Defensa de Proyecto: Plataforma Integral Remix Remix Instituto & Sistema de Sorteos</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+    /* Configuración de Impresión Profesional */
+    @page {
+      size: A4 portrait;
+      margin: 1.8cm 1.5cm 2cm 1.5cm;
+    }
+
+    @media print {
+      body {
+        font-size: 10.5pt;
+        line-height: 1.5;
+        color: #111827;
+        background: #ffffff !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .page-break {
+        page-break-before: always;
+        break-before: page;
+      }
+      .avoid-break {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      a {
+        text-decoration: none;
+        color: #111827;
+      }
+      .header-print {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        font-size: 8pt;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 4px;
+      }
+      .footer-print {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        font-size: 8pt;
+        color: #6b7280;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 4px;
+        text-align: right;
+      }
+    }
+
+    /* Estilos de Pantalla */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 50px 60px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    @media screen and (max-width: 768px) {
+      .container {
+        padding: 25px 20px;
+        margin: 10px;
+      }
+    }
+
+    /* Barra de Utilidades en Pantalla */
+    .action-bar {
+      position: sticky;
+      top: 15px;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+      margin-bottom: 25px;
+    }
+
+    .action-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .action-btn:hover {
+      background: #1d4ed8;
+    }
+    .action-btn-secondary {
+      background: #374151;
+      color: #e5e7eb;
+    }
+    .action-btn-secondary:hover {
+      background: #4b5563;
+    }
+
+    /* Tipografía y Jerarquía */
+    h1 {
+      font-size: 26pt;
+      line-height: 1.2;
+      color: #0f172a;
+      margin-bottom: 8px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-size: 17pt;
+      color: #1e3a8a;
+      border-bottom: 2px solid #bfdbfe;
+      padding-bottom: 6px;
+      margin-top: 35px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    h3 {
+      font-size: 13pt;
+      color: #1e293b;
+      margin-top: 22px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 12px;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-top: 0;
+      margin-bottom: 15px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* Portada Académica */
+    .cover {
+      text-align: center;
+      padding: 60px 20px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 40px;
+    }
+    .cover-institution {
+      font-size: 16pt;
+      font-weight: 800;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 15px;
+    }
+    .cover-subtitle {
+      font-size: 13pt;
+      color: #4b5563;
+      margin-bottom: 35px;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cover-meta {
+      display: inline-block;
+      text-align: left;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 18px 28px;
+      margin-top: 20px;
+      font-size: 10.5pt;
+    }
+    .cover-meta table td {
+      padding: 4px 10px;
+    }
+
+    /* Cuadros Destacados (Callouts) */
+    .callout {
+      background: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      padding: 14px 18px;
+      margin: 18px 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 10pt;
+    }
+    .callout-tech {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+    }
+    .callout-alert {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+    }
+    .callout-speech {
+      background: #faf5ff;
+      border-left: 4px solid #9333ea;
+      font-style: italic;
+    }
+
+    /* Tablas de Datos */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 9.5pt;
+    }
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    table.data-table th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    table.data-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    /* Guion de Diálogo Minuto a Minuto */
+    .speech-step {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      background: #ffffff;
+    }
+    .speech-time {
+      display: inline-block;
+      background: #1e3a8a;
+      color: white;
+      font-weight: 700;
+      font-size: 8.5pt;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .speech-title {
+      font-weight: 700;
+      font-size: 11pt;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .speech-quote {
+      background: #f8fafc;
+      border-left: 3px solid #3b82f6;
+      padding: 8px 12px;
+      margin-top: 6px;
+      font-size: 10pt;
+      color: #1f2937;
+    }
+    .speech-action {
+      font-size: 9pt;
+      color: #b45309;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Tarjetas de Pregunta / Respuesta de Jurado */
+    .qa-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .qa-question {
+      background: #f1f5f9;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 10pt;
+    }
+    .qa-answer {
+      padding: 12px 14px;
+      background: #ffffff;
+      font-size: 9.5pt;
+    }
+    .qa-tag {
+      display: inline-block;
+      font-size: 7.5pt;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      margin-right: 6px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Superior de Acciones (Solo Pantalla, se oculta al imprimir) -->
+  <div class="no-print" style="max-width: 860px; margin: 15px auto 0 auto; padding: 0 10px;">
+    <div class="action-bar">
+      <div>
+        <strong style="font-size: 16px;">📄 Documento Oficial de Exposición y Sustentación</strong>
+        <div style="font-size: 12px; color: #94a3b8;">Listo para imprimir en papel o guardar como PDF (Ctrl + P)</div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="action-btn" onclick="window.print()">
+          🖨️ Imprimir / Guardar PDF
+        </button>
+        <button class="action-btn action-btn-secondary" onclick="window.location.href='/'">
+          🏠 Volver a la Web
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- PORTADA ACADÉMICA -->
+    <div class="cover avoid-break">
+      <div class="cover-institution">INSTITUCIÓN EDUCATIVA &bull; DEFENSA DE PROYECTO TECNOLÓGICO</div>
+      <h1>SISTEMA WEB INTEGRAL REMIX REMIX INSTITUTO</h1>
+      <div style="font-size: 15pt; font-weight: 700; color: #0284c7; margin-bottom: 10px;">
+        Portal Institucional, Plataforma de Sorteos Unívocos en Tiempo Real y Centro de Operaciones de Ciberseguridad (SOC)
+      </div>
+      <p class="cover-subtitle">
+        Documento maestro, guion para expositor minuto a minuto, arquitectura de software, fundamentos teóricos y banco de preguntas de sustentación ante jurado evaluador.
+      </p>
+
+      <div class="cover-meta">
+        <table>
+          <tr>
+            <td><strong>Área / Carrera:</strong></td>
+            <td>Ingeniería de Sistemas / Desarrollo de Software Web</td>
+          </tr>
+          <tr>
+            <td><strong>Plataforma:</strong></td>
+            <td>React 18 + Vite + TypeScript + Tailwind CSS + Firebase Cloud Suite</td>
+          </tr>
+          <tr>
+            <td><strong>Modalidad:</strong></td>
+            <td>Progressive Web App (PWA) + Arquitectura Serverless Reactiva</td>
+          </tr>
+          <tr>
+            <td><strong>Despliegue:</strong></td>
+            <td>Producción Web Hosting (cPanel Apache/LiteSpeed) + Firebase Realtime DB</td>
+          </tr>
+          <tr>
+            <td><strong>Versión:</strong></td>
+            <td>3.5.0 Enterprise Release</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 1: INTRODUCCIÓN Y PROBLEMA -->
+    <div class="avoid-break">
+      <h2>1. Introducción y Planteamiento del Problema</h2>
+      <p>
+        En la actualidad, las instituciones educativas enfrentan desafíos multidimensionales que van más allá de la mera docencia académica. Entre ellos destacan la necesidad de una <strong>comunicación digital transparente</strong>, la captación de nuevos estudiantes mediante procesos de <strong>admisión ágiles</strong>, y de forma crítica, la <strong>sostenibilidad financiera y recaudación de fondos</strong> mediante actividades extracurriculares como rifas y sorteos benéficos institucionales.
+      </p>
+      <p>
+        Históricamente, los sorteos escolares o benéficos se han gestionado mediante talonarios de papel físicos o sistemas improvisados de hojas de cálculo. Este enfoque acarrea fallas sistemáticas críticas:
+      </p>
+      <ul>
+        <li><strong>Falta de trazabilidad y fraude:</strong> Talonarios duplicados, boletos perdidos y quejas de participantes que dudan de la transparencia del sorteo.</li>
+        <li><strong>Vulnerabilidad de datos personales:</strong> Exposición de listas con nombres, teléfonos y correos al alcance de cualquier persona.</li>
+        <li><strong>Fragmentación tecnológica:</strong> La institución suele tener una web informativa por un lado, un sistema de boletos por otro, y nula protección contra ciberataques.</li>
+      </ul>
+      <div class="callout">
+        <strong>Propuesta de Valor de este Proyecto:</strong> Se diseñó e implementó un ecosistema unificado que integra en una sola plataforma la identidad institucional, un sistema de sorteos con verificación criptográfica pública y registro unívoco, un módulo de inventario por códigos QR, y un Centro de Operaciones de Ciberseguridad (SOC) con capacidad de bloqueo reactivo en tiempo real.
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: OBJETIVOS DEL PROYECTO -->
+    <div class="avoid-break">
+      <h2>2. Objetivos del Proyecto</h2>
+      <h3>2.1. Objetivo General</h3>
+      <p>
+        Desarrollar y desplegar una plataforma web integral, modular y de alto rendimiento que centralice la gestión académica, la interacción con la comunidad estudiantil y el control automatizado y transparente de eventos de sorteos benéficos, respaldado por estándares modernos de ciberseguridad y compatibilidad multiplataforma PWA.
+      </p>
+
+      <h3>2.2. Objetivos Específicos</h3>
+      <ol>
+        <li><strong>Desarrollar un Portal Institucional Dinámico:</strong> Proveer módulos de oferta académica, noticias, admisiones, testimonios, galería y mesa de ayuda con tutoría interactiva.</li>
+        <li><strong>Implementar un Módulo Criptográfico y Unívoco de Sorteos:</strong>
+          <ul>
+            <li>Permitir la generación masiva de boletos con códigos alfanuméricos únicos y código QR de validación.</li>
+            <li>Habilitar la consulta pública donde el usuario ingresa su código y registra su boleto con sus datos (nombre, teléfono y correo).</li>
+            <li><strong>Blindaje de registro:</strong> Una vez registrado, el boleto queda perpetuamente sellado mostrando únicamente <em>"Registrado por: [Nombre]"</em>, eliminando para el público la opción de borrarlo, editarlo o alterar datos ajenos.</li>
+            <li>Garantizar una ruleta visual de selección aleatoria en vivo libre de sesgos para la transmisión del sorteo.</li>
+            <li>Crear una función de <strong>"Bloqueo de Emergencia / Modo Sorteo"</strong> en el panel de control, que permite congelar temporalmente la web institucional y enfocar todo el tráfico en el evento de sorteo activo.</li>
+          </ul>
+        </li>
+        <li><strong>Asegurar la Solución con Módulos de Ciberseguridad (SOC):</strong> Monitor de ataques, filtrado de direcciones IP maliciosas, registro de eventos de auditoría y autenticación de administradores con roles RBAC.</li>
+        <li><strong>Garantizar Disponibilidad Multiplataforma (PWA):</strong> Capacidad de instalación en dispositivos móviles y de escritorio sin pasar por tiendas de aplicaciones, con caché offline.</li>
+      </ol>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECCIÓN 3: MARCO TEÓRICO Y TECNOLOGÍAS (EL RELLENO TÉCNICO FUNDAMENTAL) -->
+    <h2>3. Marco Teórico y Arquitectura Tecnológica</h2>
+    <p>
+      Para garantizar escalabilidad, tiempos de carga inferiores a 1 segundo y máxima seguridad, la solución fue concebida bajo el paradigma <strong>JAMstack moderno</strong> con desacoplamiento entre capa de presentación y persistencia en la nube.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Capa / Componente</th>
+          <th>Tecnología Seleccionada</th>
+          <th>Justificación de Ingeniería</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Frontend Core</strong></td>
+          <td>React 18 + TypeScript</td>
+          <td>Virtual DOM para re-renderizado reactivo; TypeScript aporta tipado estático eliminando errores en tiempo de compilación.</td>
+        </tr>
+        <tr>
+          <td><strong>Empaquetador</strong></td>
+          <td>Vite Bundler (ESBuild + Rollup)</td>
+          <td>Compilación ultra-rápida basada en módulos ES nativos y generación de chunks minificados para distribución estática.</td>
+        </tr>
+        <tr>
+          <td><strong>Estilos y UI</strong></td>
+          <td>Tailwind CSS</td>
+          <td>Diseño atómico sin sobrecarga de clases huérfanas, responsive mobile-first y optimización vía PurgeCSS.</td>
+        </tr>
+        <tr>
+          <td><strong>Base de Datos y Nube</strong></td>
+          <td>Google Firebase Firestore</td>
+          <td>Base de datos NoSQL documental distribuida a nivel mundial, con listeners en tiempo real (`onSnapshot`) y reglas de seguridad granulares.</td>
+        </tr>
+        <tr>
+          <td><strong>Autenticación</strong></td>
+          <td>Firebase Authentication</td>
+          <td>Tokens JWT seguros, gestión de sesiones cifradas y control estricto de roles administrativos.</td>
+        </tr>
+        <tr>
+          <td><strong>Offline y PWA</strong></td>
+          <td>Workbox Service Workers</td>
+          <td>Estrategia de caché `Stale-While-Revalidate` que permite a los usuarios navegar incluso con conexiones inestables.</td>
+        </tr>
+        <tr>
+          <td><strong>Servidor Web Hosting</strong></td>
+          <td>Apache / LiteSpeed (cPanel) + .htaccess</td>
+          <td>Reglas de reescritura mod_rewrite para Single Page Application, compresión GZIP/Brotli, forzado HTTPS 301 y headers de seguridad HTTP.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-tech">
+      <strong>Fundamento de Ciberseguridad y Manejo de Datos:</strong> A diferencia de las aplicaciones web convencionales donde las consultas de base de datos viajan sin cifrar, en esta plataforma la comunicación se realiza mediante canales seguros HTTPS / TLS 1.3 con validación de tokens en cada petición hacia Firebase. Las credenciales nunca se exponen al cliente y el acceso administrativo está protegido por guardas de ruta (Route Guards) y verificación de roles.
+    </div>
+
+    <!-- SECCIÓN 4: DESCRIPCIÓN DETALLADA DE MÓDULOS -->
+    <h2>4. Módulos y Funcionalidades del Sistema</h2>
+
+    <h3>4.1. Módulo 1: Portal Institucional & Admisiones</h3>
+    <p>
+      Diseñado para proyectar la identidad académica de Remix Remix Instituto. Incluye catálogo de carreras, panel de testimonios de egresados, noticias institucionales, calendario de eventos y un sistema de admisiones en línea donde los postulantes envían su ficha de inscripción digital.
+    </p>
+
+    <h3>4.2. Módulo 2: Sistema de Sorteos Unívocos (La Joya de Innovación)</h3>
+    <p>
+      Este módulo resuelve el problema de la desconfianza en las rifas benéficas:
+    </p>
+    <ul>
+      <li><strong>Generación Paramétrica de Boletos:</strong> El administrador define el nombre del sorteo, precio, fecha límite, número de boletos y genera series alfanuméricas únicas (ej. <code>RM-7489-TX</code>) con códigos QR vinculados.</li>
+      <li><strong>Mesa de Verificación Pública:</strong> En la sección pública de sorteos, cualquier persona que adquirió un boleto puede buscarlo por su código.</li>
+      <li><strong>Proceso de Registro Obligatorio y Blindado:</strong> Si el boleto está libre, se le pide ingresar:
+        <ol>
+          <li>Nombre completo</li>
+          <li>Número de teléfono / celular</li>
+          <li>Correo electrónico</li>
+        </ol>
+        Al confirmar, el boleto queda automáticamente registrado y vinculado de por vida.
+      </li>
+      <li><strong>Restricción para Usuarios Normales:</strong> Por directiva de seguridad y privacidad, un usuario público <strong>NO puede borrar</strong> boletos, <strong>NO puede imprimir</strong> boletos masivos y <strong>NO puede modificar</strong> los datos de otro usuario. Si busca un boleto ya tomado, el sistema únicamente informa con total sobriedad:
+        <br><center style="margin: 8px 0;"><strong><code>✅ Boleto Oficial - Registrado por: [Nombre del Participante]</code></strong></center>
+        Protegiendo el número telefónico y correo del participante ante extraños.
+      </li>
+      <li><strong>Modo Bloqueo de Sitio (Sorteo Exclusivo):</strong> En el panel de administración existe un interruptor maestro que, al activarse para un evento en vivo, bloquea la navegación general de la web y fuerza a cualquier visitante a ver únicamente la pantalla del sorteo en vivo, ideal para transmisiones de premiación.</li>
+      <li><strong>Ruleta Animada de Ganadores:</strong> Algoritmo pseudo-aleatorio basado en <code>crypto.getRandomValues()</code> que simula una ruleta visual de alta fidelidad para elegir al ganador frente a la audiencia.</li>
+    </ul>
+
+    <h3>4.3. Módulo 3: Centro de Operaciones de Ciberseguridad (SOC) & Control de Acceso</h3>
+    <p>
+      Permite al equipo técnico monitorear en tiempo real intentos de accesos no autorizados, registrar direcciones IP, aplicar listas negras instantáneas y, en caso de ataque masivo, activar la <strong>Pantalla de Apagón de Emergencia (Emergency Blackout)</strong> para resguardar la integridad de los datos.
+    </p>
+
+    <h3>4.4. Módulo 4: Inventario Inteligente con Escáner QR</h3>
+    <p>
+      Control de activos institucionales (equipos de computación, proyectores, laboratorios) etiquetados con códigos QR. Mediante la cámara del teléfono o laptop (WebRTC API), el administrador escanea el QR en segundos y actualiza el estado y responsable del bien.
+    </p>
+
+    <div class="page-break"></div>
+
+    <!-- SECCIÓN 5: GUION MINUTO A MINUTO (SPEECH DE EXPOSICIÓN) -->
+    <h2>5. Guion de Exposición Minuto a Minuto (Speech del Expositor)</h2>
+    <p>
+      <em>Instrucción para el expositor: Utiliza este guion ensayado. Mantén contacto visual con el jurado, habla con tono seguro y realiza la demostración en pantalla de forma coordinada con tus palabras.</em>
+    </p>
+
+    <div class="speech-step">
+      <span class="speech-time">Minuto 0:00 - 1:30 &bull; Introducción y Saludo</span>
+      <div class="speech-title">Presentación Personal, Título e Impacto del Problema</div>
+      <div class="speech-quote">
+        "Buenos días, distinguidos miembros del jurado evaluador y presentes. Mi nombre es [Tu Nombre] y el día de hoy tengo el agrado de presentarles la plataforma web integral <strong>Remix Remix Instituto</strong>.<br>
+        Las instituciones modernas hoy en día no solo requieren una vitrina digital para mostrar sus carreras, sino herramientas tecnológicas reales que automaticen procesos críticos: matriculación, control de inventario y, muy especialmente, la gestión de eventos de recaudación como sorteos y rifas institucionales, los cuales tradicionalmente han sufrido por desorganización, boletos clonados y falta de confianza ciudadana.<br>
+        Para solucionar esto, desarrollamos un ecosistema web completo, seguro, escalable y con capacidad de funcionamiento sin conexión mediante tecnología PWA."
+      </div>
+      <div class="speech-action">Acción en pantalla: Mostrar la página de inicio (Hero banner, carreras y navegación general).</div>
+    </div>
+
+    <div class="speech-step">
+      <span class="speech-time">Minuto 1:30 - 3:30 &bull; El Portal Web y Admisiones</span>
+      <div class="speech-title">Experiencia de Usuario, Responsive Design y PWA</div>
+      <div class="speech-quote">
+        "Iniciando por el portal público, observamos una interfaz moderna construida bajo estándares mobile-first con React y Tailwind CSS. El sitio cuenta con soporte multilingüe, catálogo dinámico de oferta académica y un formulario de admisiones en línea conectado en tiempo real a la nube.<br>
+        Además, la aplicación está configurada como una Progressive Web App (PWA). Esto significa que cualquier estudiante o padre de familia puede hacer clic en 'Instalar Aplicación' y tendrá un acceso directo en su teléfono Android, iOS o computadora, capaz de consultar información esencial incluso si se corta la conexión a internet gracias a los Service Workers con Workbox."
+      </div>
+      <div class="speech-action">Acción en pantalla: Mostrar el botón de instalación PWA, cambiar el idioma y abrir la sección de Admisiones.</div>
+    </div>
+
+    <div class="speech-step">
+      <span class="speech-time">Minuto 3:30 - 7:00 &bull; El Núcleo de la Innovación: Sorteos y Verificación</span>
+      <div class="speech-title">Demostración en Vivo del Sistema de Boletos y Registro Blindado</div>
+      <div class="speech-quote">
+        "Pasemos ahora al módulo más innovador y solicitado: <strong>El Sistema de Sorteos Unívocos</strong>.<br>
+        ¿Cómo garantizamos transparencia total? Cuando la institución lanza una rifa, el sistema genera boletos con códigos identificadores irrepetibles. El comprador recibe su código o boleto impreso.<br>
+        Al entrar a la sección de sorteos, el usuario digita su número. Si el boleto es nuevo, el sistema le permite ingresar su Nombre, Teléfono y Correo. En ese milisegundo, la base de datos Firestore sella el boleto.<br>
+        A partir de ese instante, nadie más puede adjudicarse ese boleto. Y por estrictas políticas de ciberseguridad y protección de datos que hemos implementado, los usuarios normales <strong>no pueden eliminar boletos ni modificarlos desde la web</strong>. Si otra persona consulta ese mismo boleto, el sistema únicamente indicará: <em>'Registrado por: Juan Pérez'</em>, ocultando datos privados y validando la posesión legítima."
+      </div>
+      <div class="speech-action">Acción en pantalla: Escribir un código de boleto en el buscador público, mostrar cómo se registra y cómo queda sellado sin botones de borrado ni alteración.</div>
+    </div>
+
+    <div class="speech-step">
+      <span class="speech-time">Minuto 7:00 - 9:30 &bull; Panel de Administración y Modo Bloqueo</span>
+      <div class="speech-title">Gestión de Boletos, Ruleta en Vivo y Control Total</div>
+      <div class="speech-quote">
+        "Ahora nos trasladamos al <strong>Panel de Control Administrativo</strong>. Aquí los directivos cuentan con herramientas profesionales: generación masiva de boletos, importación y exportación de listas en formato CSV y la impresión de plantillas oficiales con código QR.<br>
+        Además, para el día de la premiación, contamos con dos funciones exclusivas:<br>
+        1. <strong>La Ruleta de Ganadores:</strong> Un componente algorítmico aleatorio con efectos visuales que selecciona al ganador en vivo frente al público.<br>
+        2. <strong>El Modo Bloqueo de Página:</strong> El administrador tiene un interruptor con el cual puede pausar toda la web académica durante la hora del sorteo. Cuando este modo se activa, cualquier visitante de la institución es redirigido automáticamente al evento del sorteo para maximizar la audiencia y evitar distracciones."
+      </div>
+      <div class="speech-action">Acción en pantalla: Iniciar sesión en <code>/admin</code>, mostrar la lista de boletos, simular la ruleta de sorteo y enseñar el interruptor de bloqueo de sitio.</div>
+    </div>
+
+    <div class="speech-step">
+      <span class="speech-time">Minuto 9:30 - 12:00 &bull; Ciberseguridad (SOC) e Inventario QR</span>
+      <div class="speech-title">Protección de Datos, Mitigación de Amenazas y WebRTC</div>
+      <div class="speech-quote">
+        "Para respaldar esta infraestructura no dejamos de lado la seguridad. Integramos un <strong>Centro de Operaciones de Seguridad (SOC)</strong> que monitorea accesos, registra eventos de auditoría y permite bloquear direcciones IP sospechosas con un solo clic. Si ocurriera una contingencia grave, disponemos de una pantalla de 'Blackout' o apagón controlado para aislar la base de datos.<br>
+        Finalmente, incorporamos un <strong>Módulo de Inventario con Códigos QR</strong> que utiliza la API WebRTC para activar la cámara del dispositivo en tiempo real, permitiendo inventariar activos físicos del instituto en cuestión de segundos."
+      </div>
+      <div class="speech-action">Acción en pantalla: Abrir el módulo SOC de ciberseguridad y el escáner de cámara QR.</div>
+    </div>
+
+    <div class="speech-step">
+      <span class="speech-time">Minuto 12:00 - 14:00 &bull; Despliegue en Servidor y Conclusión</span>
+      <div class="speech-title">Hosting cPanel, Rendimiento y Cierre de la Presentación</div>
+      <div class="speech-quote">
+        "El proyecto fue preparado y empaquetado para despliegue en entornos de producción en servidores compartidos cPanel mediante un archivo <code>.htaccess</code> configurado con compresión GZIP, forzado HTTPS y redirección limpia para Single Page Applications.<br>
+        En conclusión, este proyecto demuestra que es posible combinar un diseño estético de clase mundial con una arquitectura robusta en la nube, resolviendo problemas de gestión, ciberseguridad y transparencia comunitaria.<br>
+        Quedo a su entera disposición para responder a las preguntas del honorable jurado calificador. Muchas gracias."
+      </div>
+      <div class="speech-action">Acción: Mirar al jurado, postura erguida y ceder la palabra formalmente.</div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECCIÓN 6: BANCO DE PREGUNTAS TRAMPA DEL JURADO CON RESPUESTAS -->
+    <h2>6. Banco de Preguntas Trampa del Jurado y Respuestas Maestras</h2>
+    <p>
+      <em>Estudia a detalle estas 10 preguntas. Los jurados universitarios y técnicos suelen hacer preguntas capciosas sobre arquitectura, seguridad, base de datos y escalabilidad.</em>
+    </p>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">Arquitectura</span>
+        1. ¿Por qué eligieron React con Vite en lugar de un framework como Next.js o PHP tradicional en cPanel?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "Elegimos React con Vite debido a que la aplicación requiere alta interactividad en tiempo real (ruleta de sorteos, buscador instantáneo de boletos, escáner de cámara QR y actualización en vivo mediante WebSockets/listeners de Firebase). Un PHP tradicional requeriría recargas continuas de página (SSR lento) afectando la experiencia de usuario. Además, al compilar con Vite generamos un bundle estático ultra optimizado que se sirve directamente desde la memoria caché de Apache en cPanel con tiempos de respuesta inferiores a 100 ms, eliminando la sobrecarga de procesamiento en el servidor de hosting."
+      </div>
+    </div>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">Seguridad</span>
+        2. Si un usuario malintencionado inspecciona el código en el navegador con F12, ¿puede falsificar un boleto o declararse ganador?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "Absolutamente no. La validación en el cliente es solo estética. La regla de verdad reside en Firebase Firestore y sus reglas de seguridad (Security Rules). Cuando un usuario registra un boleto, la transacción se ejecuta atómicamente; si el boleto ya posee un `participantName`, la base de datos rechaza cualquier sobreescritura. Asimismo, la ruleta y la elección de ganadores es una función con privilegios de administrador autenticado mediante JSON Web Tokens (JWT), por lo que un usuario sin sesión válida en Firebase Auth recibe un error 403 Forbidden a nivel de protocolo."
+      </div>
+    </div>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">Base de Datos</span>
+        3. ¿Por qué utilizaron una base de datos NoSQL como Firestore en vez de una relacional como MySQL o PostgreSQL?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "Por tres motivos cruciales: primero, la sincronización en tiempo real sin necesidad de configurar un servidor Socket.io dedicado, lo que permite que cuando un boleto se registre, el panel del administrador lo vea reflejado al instante. Segundo, la escalabilidad elástica: durante un sorteo en vivo el tráfico puede multiplicarse por 100 en minutos; Firestore escala horizontalmente de forma automática sin que el servidor sufra caídas por exceso de conexiones simultáneas. Y tercero, la flexibilidad de esquema documental para manejar estados de boletos y registros de auditoría del SOC."
+      </div>
+    </div>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">Protección de Datos</span>
+        4. ¿Por qué en la consulta pública de boletos solo se muestra el nombre y no el teléfono ni el correo?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "Por cumplimiento de normativas de protección de datos personales (Habeas Data / GDPR). Si mostráramos el número de celular o correo de quien compró el boleto, cualquier persona que adivine o consulte números correlativos podría recolectar una base de datos privada de números telefónicos para spam o estafas. Al mostrar únicamente `Registrado por: [Nombre]` se brinda certeza y transparencia de que el boleto está ocupado, protegiendo al 100% la privacidad del participante."
+      </div>
+    </div>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">Infraestructura</span>
+        5. ¿Cómo resuelve el archivo .htaccess las rutas en cPanel cuando un usuario recarga la página en `/sorteos` o `/admin`?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "En las Single Page Applications (SPA), las rutas como `/sorteos` o `/admin` son manejadas en el cliente por React Router y no corresponden a carpetas físicas en el servidor. El archivo `.htaccess` implementa directivas de `mod_rewrite`: comprueba si la petición corresponde a un archivo o carpeta real (`RewriteCond %{REQUEST_FILENAME} !-f`), y si no existe, reescribe silenciosamente la petición hacia `index.html` con código 200. De esta manera, el navegador carga React y el enrutador interno muestra el componente exacto sin arrojar el típico error 404 de Apache."
+      </div>
+    </div>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">PWA / Móvil</span>
+        6. ¿Qué beneficios reales aporta que la aplicación sea una PWA frente a una app nativa de Android/iOS?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "Elimina la fricción de instalación: el usuario no tiene que gastar memoria descargando 80 MB de una tienda de aplicaciones ni la institución debe pagar membresías anuales a Google Play o Apple Store. Con un solo código fuente mantenemos la versión web, móvil y de escritorio. Además, gracias a los Service Workers, los activos principales quedan en el caché del navegador, lo que permite que el portal abra instantáneamente incluso con señal 3G débil."
+      </div>
+    </div>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">Algoritmos</span>
+        7. ¿Cómo garantizan que la ruleta del sorteo no esté manipulada o trucada?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "El sorteo utiliza la API criptográfica nativa del navegador `window.crypto.getRandomValues()` en lugar del simple `Math.random()`. `Math.random()` genera números pseudoaleatorios con semillas predecibles, mientras que la API Crypto utiliza fuentes de entropía del sistema operativo, garantizando una distribución estadística uniforme e impredecible entre todos los boletos válidos registrados."
+      </div>
+    </div>
+
+    <div class="qa-card avoid-break">
+      <div class="qa-question">
+        <span class="qa-tag">Operaciones</span>
+        8. ¿Qué sucede si durante la transmisión del sorteo la web sufre un ataque de denegación de servicio (DDoS) o spam masivo?
+      </div>
+      <div class="qa-answer">
+        <strong>Respuesta recomendada:</strong> "Disponemos de tres capas de defensa: primero, la CDN global de Firebase y las reglas de cuota que absorben picos volumétricos. Segundo, el módulo de Ciberseguridad SOC integrado que permite al administrador identificar y bloquear en tiempo real las direcciones IP agresoras. Y tercero, el botón de 'Bloqueo de Emergencia / Blackout' que desactiva temporalmente peticiones no esenciales y congela el estado para salvaguardar la base de datos."
+      </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECCIÓN 7: CONCLUSIONES Y RECOMENDACIONES -->
+    <h2>7. Conclusiones y Recomendaciones</h2>
+
+    <h3>7.1. Conclusiones</h3>
+    <ul>
+      <li>Se logró con éxito el desarrollo e integración de un portal educativo de alto nivel con un sistema pionero de sorteos criptográficos y un módulo de ciberseguridad SOC en una sola plataforma unificada.</li>
+      <li>La arquitectura sin servidor (Serverless) y el almacenamiento documental en la nube eliminaron la necesidad de servidores locales costosos, reduciendo los costos operativos a prácticamente cero para la institución educativa.</li>
+      <li>El mecanismo de registro unívoco de boletos erradicó el fraude en rifas institucionales, garantizando que una vez registrado un boleto, la autoría quede blindada sin posibilidad de alteración por terceros.</li>
+      <li>El empaquetado para cPanel demostró la viabilidad de desplegar aplicaciones React modernas en hostings comerciales estándar manteniendo soporte para PWA, HTTPS y rutas SPA fluidas.</li>
+    </ul>
+
+    <h3>7.2. Recomendaciones y Trabajo Futuro</h3>
+    <ul>
+      <li><strong>Integración con pasarelas de pago automatizadas:</strong> En una fase posterior, se puede añadir integración con PayPal, Stripe o códigos QR interoperables (PIX/DeUna/Yape) para la compra y pago directo del boleto en la misma plataforma.</li>
+      <li><strong>Notificaciones Push y SMS Masivo:</strong> Incorporar el servicio de Firebase Cloud Messaging (FCM) o Twilio para enviar el boleto digital directamente por WhatsApp o SMS al teléfono del comprador al momento de registrarse.</li>
+      <li><strong>Firma Digital de Certificados de Ganador:</strong> Generar automáticamente un acta de premiación en PDF firmada criptográficamente con código hash SHA-256 al finalizar el giro de la ruleta.</li>
+    </ul>
+
+    <!-- SECCIÓN 8: FIRMA Y CONFORMIDAD -->
+    <div style="margin-top: 50px;" class="avoid-break">
+      <table style="width: 100%; border: none;">
+        <tr>
+          <td style="width: 45%; text-align: center; border: none; padding-top: 40px;">
+            <div style="border-top: 1px solid #111827; width: 80%; margin: 0 auto; padding-top: 8px;">
+              <strong>Estudiante / Desarrollador</strong><br>
+              Expositor y Autor del Proyecto
+            </div>
+          </td>
+          <td style="width: 10%; border: none;"></td>
+          <td style="width: 45%; text-align: center; border: none; padding-top: 40px;">
+            <div style="border-top: 1px solid #111827; width: 80%; margin: 0 auto; padding-top: 8px;">
+              <strong>Tribunal Calificador / Jurado</strong><br>
+              Evaluación y Calificación de Proyecto
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+
+</body>
+</html>

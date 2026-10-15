@@ -28,7 +28,8 @@ import {
   ExternalLink,
   Crown,
   ChevronDown,
-  Ticket
+  Ticket,
+  Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ImageUploader from './ImageUploader';
@@ -617,6 +618,18 @@ export default function AdminDashboard() {
               )}
             </div>
           )}
+
+          <a
+            href="/exposicion.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
+            title="Abrir e imprimir el documento maestro de exposición y defensa de proyecto"
+          >
+            <Printer className="w-3.5 h-3.5 text-amber-700" />
+            <span className="hidden sm:inline">📄 Guion Exposición</span>
+            <span className="sm:hidden">📄 Guion</span>
+          </a>
 
           <button
             type="button"

@@ -167,6 +167,17 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <a 
+                  href="/exposicion.html" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-primario transition-colors font-semibold text-amber-700 flex items-center gap-1.5 hover:translate-x-1 duration-200"
+                  title="Documento de exposición y defensa de proyecto listo para imprimir"
+                >
+                  <span>📄 Guion Exposición (PDF)</span>
+                </a>
+              </li>
+              <li>
                 <Link to="/login" className="hover:text-primario transition-colors font-bold text-primario inline-block hover:translate-x-1 duration-200">
                   {t('footer.adminAccess')}
                 </Link>
